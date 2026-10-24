@@ -1,0 +1,17 @@
+{
+    "name": "Candy Cloud Vocabulary Flashcards",
+    "short_name": "Candy Vocab",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#fff8fb",
+    "theme_color": "#fff2f8",
+    "icons": [
+        {
+            "src": "assets/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}

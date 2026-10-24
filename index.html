@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="th">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+  <meta content="#fff2f8" name="theme-color"/>
+  <meta content="Pastel English vocabulary flashcards for games and everyday life" name="description"/>
+  <title>
+   Candy Cloud Vocabulary ☁️
+  </title>
+  <link href="assets/icon.svg" rel="icon" type="image/svg+xml"/>
+  <link href="manifest.webmanifest" rel="manifest"/>
+  <link href="style.css" rel="stylesheet"/>
+ </head>
+ <body>
+  <div class="floating f1">
+   ✦
+  </div>
+  <div class="floating f2">
+   ✧
+  </div>
+  <div class="floating f3">
+   ✦
+  </div>
+  <main class="app">
+   <header>
+    <div class="brand">
+     <img alt="" src="assets/icon.svg"/>
+     <span>
+      Candy Cloud
+      <small>
+       VOCAB
+      </small>
+     </span>
+    </div>
+    <span class="pill top-pill">
+     ☁️ little steps, big dreams
+    </span>
+   </header>
+   <section class="screen" id="home">
+    <div class="hero">
+     <div class="hero-text">
+      <span class="eyebrow">
+       ✧ YOUR LITTLE ENGLISH GARDEN ✧
+      </span>
+      <h1>
+       Let's learn
+       <br/>
+       <em>
+        something sweet!
+       </em>
+      </h1>
+      <p>
+       เลือกหมวดคำศัพท์ที่ชอบ แล้วออกเดินทางไปกับเหล่าเพื่อนก้อนเมฆกันเถอะ ♡
+      </p>
+     </div>
+     <div aria-hidden="true" class="hero-art">
+      <div class="sun">
+       ☀️
+      </div>
+      <div class="cloud-face">
+       <span class="eye">
+        &bull;
+       </span>
+       <span class="mouth">
+        ᴗ
+       </span>
+       <span class="eye">
+        &bull;
+       </span>
+       <div class="blush b1">
+       </div>
+       <div class="blush b2">
+       </div>
+      </div>
+      <div class="moon">
+       🌙
+      </div>
+      <div class="sparkle">
+       ✧
+      </div>
+     </div>
+    </div>
+    <div class="section-head">
+     <h2>
+      Choose your world
+      <span>
+       ✿
+      </span>
+     </h2>
+     <span class="muted">
+      เลือกหมวดคำศัพท์
+     </span>
+    </div>
+    <div class="category-grid" id="categories">
+    </div>
+    <div class="settings-panel">
+     <div class="section-head">
+      <h2>
+       Make it yours
+       <span>
+        ♡
+       </span>
+      </h2>
+     </div>
+     <div class="field">
+      <label>
+       จำนวนคำต่อรอบ
+      </label>
+      <div class="bubble-options" id="counts">
+       <button class="choice active" data-count="10">
+        10 คำ
+       </button>
+       <button class="choice" data-count="20">
+        20 คำ
+       </button>
+       <button class="choice" data-count="30">
+        30 คำ
+       </button>
+      </div>
+     </div>
+     <div class="field">
+      <label>
+       เลือกคำศัพท์ที่ต้องการเล่น
+      </label>
+      <div class="bubble-options filters" id="filters">
+       <button class="choice active" data-filter="unknown">
+        🌱 ยังจำไม่ได้
+       </button>
+       <button class="choice" data-filter="known">
+        ⭐ จำได้แล้ว
+       </button>
+       <button class="choice" data-filter="all">
+        🌈 ทั้งหมด
+       </button>
+      </div>
+     </div>
+     <div class="note">
+      🧁 เกมไม่บันทึกผลการเล่น &mdash; แก้
+      <code>
+       known
+      </code>
+      ใน
+      <code>
+       vocabulary.csv
+      </code>
+      เองได้ทุกสัปดาห์
+     </div>
+     <p class="message" id="home-message" role="status">
+     </p>
+     <button class="big-button" id="start">
+      Start learning
+      <span>
+       ➜
+      </span>
+     </button>
+    </div>
+   </section>
+   <section class="screen hidden" id="game">
+    <div class="game-top">
+     <button class="mini-button" id="go-home">
+      ⌂ Home
+     </button>
+     <div class="progress-label" id="progress-label">
+     </div>
+     <button class="mini-button" id="restart">
+      &orarr; Restart
+     </button>
+    </div>
+    <div class="progress-track">
+     <div id="progress-fill">
+     </div>
+    </div>
+    <div class="card-wrap">
+     <div class="card-decor" id="card-decor">
+      ☁️
+     </div>
+     <div class="flashcard" id="flashcard">
+      <div class="card-tag" id="card-category">
+      </div>
+      <div class="word" id="word">
+      </div>
+      <div class="ipa" id="ipa">
+      </div>
+      <div class="part" id="part">
+      </div>
+      <button class="sound-button" id="speak">
+       🔊 Listen US
+      </button>
+      <div class="answer hidden" id="answer">
+       <div class="answer-divider">
+        ✧ meaning ✧
+       </div>
+       <h2 id="meaning">
+       </h2>
+       <div class="verb-forms hidden" id="verb-forms">
+       </div>
+       <div class="examples" id="examples">
+       </div>
+      </div>
+      <button class="reveal-button" id="reveal">
+       Tap to reveal ♡
+      </button>
+     </div>
+    </div>
+    <div class="game-actions">
+     <button class="big-button" id="next">
+      Next word ➜
+     </button>
+    </div>
+   </section>
+   <section class="screen hidden" id="complete">
+    <div class="complete-card">
+     <div class="finish-art">
+      🌙 ☁️ ⭐
+     </div>
+     <span class="eyebrow">
+      YOU DID IT!
+     </span>
+     <h1>
+      Sweet job!
+     </h1>
+     <p id="finish-text">
+     </p>
+     <button class="big-button" id="again">
+      &orarr; Play again
+     </button>
+     <button class="mini-button home-end" id="finish-home">
+      ⌂ Back to home
+     </button>
+    </div>
+   </section>
+   <footer>
+    made with ♡ &middot; pastel words, brighter days
+   </footer>
+  </main>
+  <script defer="" src="app.js">
+  </script>
+ </body>
+</html>
+
