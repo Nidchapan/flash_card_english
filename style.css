@@ -56,10 +56,7 @@ header {
     color:#a277a9
 }
 
-.brand img {
-    width:50px;
-    height:50px
-}
+
 
 .brand small {
     font-size:12px;
@@ -613,9 +610,7 @@ footer {
         font-size:19px
     }
 
-    .brand img {
-        width:42px
-    }
+    
 
     .top-pill {
         display:none
@@ -753,4 +748,55 @@ footer {
         padding: 13px 15px;
         column-gap: 9px;
     }
+}
+
+/* Pastel emoji logo — no image asset required */
+.cloud-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    font-size: 32px;
+    line-height: 1;
+    background: #ffe1ef;
+    border: 2px solid #fff;
+    border-radius: 16px;
+    box-shadow: 0 5px 12px #e6a9c455;
+}
+@media (max-width: 650px) {
+    .cloud-logo { flex-basis: 42px; width: 42px; height: 42px; font-size: 29px; border-radius: 14px; }
+}
+
+/* Updated Cloud Candy header and hero artwork */
+.brand-logo {
+    display: block;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    object-fit: contain;
+    border-radius: 15px;
+}
+.hero-art-image {
+    width: 100%;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+.hero-art-image img {
+    display: block;
+    width: min(118%, 370px);
+    max-width: none;
+    height: auto;
+    object-fit: contain;
+    -webkit-mask-image: radial-gradient(ellipse 67% 64% at center, #000 65%, transparent 100%);
+    mask-image: radial-gradient(ellipse 67% 64% at center, #000 65%, transparent 100%);
+}
+@media (max-width: 650px) {
+    .brand-logo { width: 42px; height: 42px; flex-basis: 42px; border-radius: 13px; }
+    .hero-art-image { height: 185px; margin-top: 12px; }
+    .hero-art-image img { width: min(100%, 300px); }
 }
