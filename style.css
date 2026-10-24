@@ -800,3 +800,45 @@ footer {
     .hero-art-image { height: 185px; margin-top: 12px; }
     .hero-art-image img { width: min(100%, 300px); }
 }
+
+
+/* Three learning paths and searchable vocabulary table */
+.mode-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.mode-card { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; min-height:160px; border:3px solid transparent; border-radius:27px; padding:18px 10px; box-shadow:0 7px 20px #afa1bb1c; text-align:center; transition:transform .18s; }
+.mode-card:hover { transform:translateY(-3px); }
+.mode-card strong { font-size:18px; font-weight:900; }
+.mode-card > span:last-child { font-size:12px; opacity:.8; }
+.mode-emoji { font-size:39px; }
+.mode-new { background:#d8ebff; }
+.mode-review { background:#ffe1ea; }
+.mode-all { background:#e8dfff; }
+.home-summary { margin-top:20px; }
+.example-line { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.example-line strong { flex:1; line-height:1.7; }
+.example-sound, .table-sound { border:0; border-radius:14px; background:#e1f2ff; padding:7px 11px; flex-shrink:0; font-size:17px; }
+.example-sound:hover, .table-sound:hover { background:#cce8ff; }
+.all-panel { margin-top:24px; padding:24px; background:#ffffffd9; border:2px solid white; border-radius:28px; box-shadow:var(--shadow); }
+.word-search { display:block; width:100%; padding:13px 16px; border:2px solid #eadff1; border-radius:18px; background:#fff; color:var(--ink); font:inherit; outline-offset:3px; }
+.table-scroll { overflow-x:auto; border-radius:15px; }
+.vocab-table { width:100%; border-collapse:collapse; text-align:left; font-size:13px; }
+.vocab-table th { background:#f4e9ff; font-weight:900; white-space:nowrap; }
+.vocab-table th, .vocab-table td { padding:12px 10px; border-bottom:1px solid #f0e6f0; }
+.vocab-table td:first-child { font-weight:800; color:#8774a6; }
+.vocab-table td:last-child { text-align:center; }
+.table-pager { display:flex; justify-content:center; align-items:center; gap:16px; margin-top:20px; }
+.table-pager button:disabled { opacity:.4; cursor:default; }
+@media (max-width:650px) {
+    .mode-grid { gap:8px; }
+    .mode-card { min-height:136px; padding:13px 5px; gap:6px; border-radius:19px; }
+    .mode-card strong { font-size:13px; }
+    .mode-card > span:last-child { font-size:10px; }
+    .mode-emoji { font-size:30px; }
+    .all-panel { padding:14px 9px; }
+    .vocab-table { font-size:11px; }
+    .vocab-table th, .vocab-table td { padding:9px 5px; }
+    .table-sound { padding:6px; }
+}
+
+/* All Words: date-based filter, without saved progress */
+.word-filter { display:flex; flex-wrap:wrap; gap:9px; margin:12px 0 16px; }
+.word-filter .choice { padding:9px 16px; }
