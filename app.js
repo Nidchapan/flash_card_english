@@ -140,8 +140,8 @@ function start(mode) {
     }
     $("home-message").textContent = "";
     cursor = 0;
-    renderCard();
     show("game");
+    renderCard();
 }
 
 function txt(id, value) { $(id).textContent = value || ""; }
@@ -191,6 +191,7 @@ function renderCard() {
         $("examples").append(box);
     }
     txt("next", cursor === deck.length - 1 ? "Finish round ✨" : "Next word ➜");
+    speakText(word.word);
 }
 
 function next() {
