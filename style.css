@@ -842,3 +842,21 @@ footer {
 /* All Words: date-based filter, without saved progress */
 .word-filter { display:flex; flex-wrap:wrap; gap:9px; margin:12px 0 16px; }
 .word-filter .choice { padding:9px 16px; }
+
+/* v13 learning schedule status labels */
+.word-status { display:inline-block; border-radius:99px; padding:5px 9px; font-size:11px; font-weight:800; white-space:nowrap; }
+.status-new { background:#dcf6e9; color:#48876b; }
+.status-old { background:#e8dfff; color:#7962a1; }
+.status-upcoming { background:#f2eef4; color:#8f8698; }
+
+/* v14: compact pastel memory flags */
+.memory-select { max-width: 150px; width:100%; border:1px solid #ead9ed; border-radius:12px; padding:7px 5px; background:#fff; color:#78688e; font:inherit; font-size:12px; cursor:pointer; }
+.memory-select[data-state="known"] { background:#e2f7e9; color:#327657; }
+.memory-select[data-state="learning"] { background:#fff0da; color:#9a6a38; }
+.card-memory-wrap { display:flex; align-items:center; justify-content:center; gap:10px; margin:0 auto 14px; font-size:12px; font-weight:800; }
+.vocab-table td:nth-last-child(2) { min-width:135px; }
+
+/* Read-only memory flags from vocabulary.csv */
+.memory-select { display:inline-block; border-radius:16px; padding:6px 10px; font-weight:800; font-size:12px; background:#f5effa; }
+.memory-known { background:#dcf6e9; color:#437c65; }
+.memory-learning { background:#fff0dc; color:#9c7854; }

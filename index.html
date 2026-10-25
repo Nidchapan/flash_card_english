@@ -74,6 +74,7 @@
                     <div class="ipa" id="ipa"></div>
                     <div class="part" id="part"></div>
                     <button class="sound-button" id="speak" type="button">🔊 Listen US</button>
+                    <div class="card-memory-wrap">ความจำ: <span id="card-memory" class="memory-select"></span></div>
                     <div class="answer hidden" id="answer">
                         <div class="answer-divider">✧ meaning ✧</div>
                         <h2 id="meaning"></h2>
@@ -97,11 +98,13 @@
                     <button type="button" class="choice active" data-word-filter="all" aria-pressed="true">🌈 All</button>
                     <button type="button" class="choice" data-word-filter="new" aria-pressed="false">🌱 New</button>
                     <button type="button" class="choice" data-word-filter="old" aria-pressed="false">🔁 คำเก่า</button>
+                    <button type="button" class="choice" data-word-filter="known" aria-pressed="false">✓ จำได้</button>
+                    <button type="button" class="choice" data-word-filter="learning" aria-pressed="false">↻ ยังจำไม่ได้</button>
                 </div>
                 <p id="all-count" class="muted" role="status"></p>
                 <div class="table-scroll">
                     <table class="vocab-table">
-                        <thead><tr><th>Word</th><th>Part of speech</th><th>คำแปล</th><th>เสียง</th></tr></thead>
+                        <thead><tr><th>Word</th><th>Part of speech</th><th>คำแปล</th><th>ชุดคำศัพท์</th><th>ความจำ</th><th>เสียง</th></tr></thead>
                         <tbody id="word-rows"></tbody>
                     </table>
                 </div>

@@ -63,26 +63,36 @@ function currentSetIndex(date = new Date()) {
     return Math.max(0, Math.floor((todayDay - startDay) / 86400000 / DAYS_PER_SET));
 }
 
-function setRange(index) {
+// The CSV is the sole source of truth. No browser persistence.
+const learningState = word => truth(word.known) ? "known" : "learning";
+
+// Preserve CSV row order within each category; interleave categories fairly.
+function orderedLearningWords() {
+    const available = words.filter(w => truth(w.enabled));
+    const buckets = categories.map(cat => available.filter(w => w.category === cat.id));
+    const other = available.filter(w => !categories.some(cat => cat.id === w.category));
+    if (other.length) buckets.push(other);
+    const ordered = [];
+    let remaining = true;
+    while (remaining) {
+        remaining = false;
+        for (const bucket of buckets) {
+            if (bucket.length) { ordered.push(bucket.shift()); remaining = true; }
+        }
+    }
+    return ordered;
+}
+
+function getWordSchedule() {
+    const ordered = orderedLearningWords().filter(w => !truth(w.known));
+    const index = currentSetIndex();
     const start = index * WORDS_PER_SET;
-    return { start, end: start + WORDS_PER_SET };
+    const end = start + WORDS_PER_SET;
+    return { ordered, current: ordered.slice(start, end), older: ordered.slice(0, start), start, end };
 }
 
-function eligibleWords() {
-    // CSV row order defines IDs 1, 2, 3...; disabled rows keep their ID slots.
-    return words;
-}
-
-function getNewWords() {
-    const { start, end } = setRange(currentSetIndex());
-    return eligibleWords().slice(start, end).filter(word => truth(word.enabled));
-}
-
-function getReviewWords() {
-    const { start } = setRange(currentSetIndex());
-    const older = eligibleWords().slice(0, start).filter(word => truth(word.enabled));
-    return shuffle([...older]).slice(0, WORDS_PER_SET);
-}
+function getNewWords() { return getWordSchedule().current; }
+function getReviewWords() { return shuffle([...getWordSchedule().older]).slice(0, WORDS_PER_SET); }
 
 function show(id) {
     ["home", "game", "complete", "all-words"].forEach(page => {
@@ -112,9 +122,9 @@ function speakText(text) {
 
 function refreshHome() {
     const setIndex = currentSetIndex();
-    const { start, end } = setRange(setIndex);
-    $("new-set-label").textContent = `Set ${setIndex + 1} · ID ${start + 1}–${end}`;
-    $("date-summary").textContent = `Set ${setIndex + 1} · 25 คำ / 10 วัน · คำใหม่ ID ${start + 1}–${end} · ทบทวนจาก ID 1–${start || 0}`;
+    const { current, older } = getWordSchedule();
+    $("new-set-label").textContent = `Set ${setIndex + 1} · ${current.length} คำ / 10 วัน`;
+    $("date-summary").textContent = `Set ${setIndex + 1} · คำใหม่ ${current.length} คำ (กระจายทุกหมวด) · คำเก่า ${older.length} คำ · เริ่ม 24 Oct 2026`;
 }
 
 function start(mode) {
@@ -138,6 +148,7 @@ function txt(id, value) { $(id).textContent = value || ""; }
 
 function renderCard() {
     const word = deck[cursor];
+    $("card-memory").textContent = learningState(word) === "known" ? "✓ จำได้" : "↻ ยังจำไม่ได้";
     txt("progress-label", `${gameMode === "review" ? "Review" : "New Words"} · ${cursor + 1} / ${deck.length}`);
     $("progress-fill").style.width = `${100 * (cursor + 1) / deck.length}%`;
     const category = categories.find(item => item.id === word.category);
@@ -195,11 +206,15 @@ function next() {
 
 function getFilteredWords() {
     const search = $("word-search").value.trim().toLocaleLowerCase();
-    const { start, end } = setRange(currentSetIndex());
-    return words.filter((word, index) => {
+    const schedule = getWordSchedule();
+    const newRows = new Set(schedule.current.map(w => w.rowNumber));
+    const oldRows = new Set(schedule.older.map(w => w.rowNumber));
+    return words.filter(word => {
         const inSet = wordTableFilter === "all" ||
-            (wordTableFilter === "new" && index >= start && index < end) ||
-            (wordTableFilter === "old" && index < start);
+            (wordTableFilter === "known" && learningState(word) === "known") ||
+            (wordTableFilter === "learning" && learningState(word) === "learning") ||
+            (wordTableFilter === "new" && newRows.has(word.rowNumber)) ||
+            (wordTableFilter === "old" && oldRows.has(word.rowNumber));
         return inSet && truth(word.enabled) &&
             [word.word, word.pos, word.meaning_th].some(value => norm(value).toLocaleLowerCase().includes(search));
     });
@@ -212,6 +227,9 @@ function renderTable() {
     const pageWords = matches.slice(tablePage * TABLE_PAGE_SIZE, (tablePage + 1) * TABLE_PAGE_SIZE);
     const body = $("word-rows");
     body.replaceChildren();
+    const schedule = getWordSchedule();
+    const newRows = new Set(schedule.current.map(w => w.rowNumber));
+    const oldRows = new Set(schedule.older.map(w => w.rowNumber));
     for (const word of pageWords) {
         const tr = document.createElement("tr");
         for (const value of [word.word, word.pos, word.meaning_th]) {
@@ -219,6 +237,20 @@ function renderTable() {
             td.textContent = value || "—";
             tr.append(td);
         }
+        const statusCell = document.createElement("td");
+        const status = document.createElement("span");
+        const isNew = newRows.has(word.rowNumber);
+        const isOld = oldRows.has(word.rowNumber);
+        status.className = `word-status ${isNew ? "status-new" : isOld ? "status-old" : "status-upcoming"}`;
+        status.textContent = isNew ? "🌱 New" : isOld ? "🔁 Old" : "🔒 Upcoming";
+        statusCell.append(status);
+        tr.append(statusCell);
+        const memoryCell = document.createElement("td");
+        const memoryBadge = document.createElement("span");
+        memoryBadge.className = `memory-select ${learningState(word) === "known" ? "memory-known" : "memory-learning"}`;
+        memoryBadge.textContent = learningState(word) === "known" ? "✓ จำได้" : "↻ ยังจำไม่ได้";
+        memoryCell.append(memoryBadge);
+        tr.append(memoryCell);
         const soundCell = document.createElement("td");
         const button = document.createElement("button");
         button.type = "button";
@@ -230,7 +262,7 @@ function renderTable() {
         tr.append(soundCell);
         body.append(tr);
     }
-    txt("all-count", `พบ ${matches.length} คำ`);
+    txt("all-count", `พบ ${matches.length} คำ · จำได้ ${words.filter(w => learningState(w) === "known").length} · ยังจำไม่ได้ ${words.filter(w => learningState(w) === "learning").length}`);
     txt("page-label", `${tablePage + 1} / ${pages}`);
     $("page-prev").disabled = tablePage === 0;
     $("page-next").disabled = tablePage >= pages - 1;
@@ -240,8 +272,9 @@ async function load() {
     try {
         const response = await fetch("vocabulary.csv", { cache: "no-cache" });
         if (!response.ok) throw Error(`HTTP ${response.status}`);
-        words = parseCSV(await response.text());
+        words = parseCSV(await response.text()).map((word, index) => ({ ...word, rowNumber: index + 1 }));
         if (!words.length) throw Error("CSV is empty");
+        if (!("known" in words[0])) throw Error("ไม่พบคอลัมน์ known ใน vocabulary.csv");
         refreshHome();
     } catch (error) {
         $("home-message").textContent = `อ่าน vocabulary.csv ไม่สำเร็จ: ${error.message} (ต้องเปิดผ่านเว็บเซิร์ฟเวอร์)`;
