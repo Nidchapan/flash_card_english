@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#fff2f8">
-    <meta name="description" content="Cloud Candy Vocab — weekly vocabulary flashcards">
+    <meta name="description" content="Cloud Candy Vocab — 25 words every 10 days">
     <title>Cloud Candy Vocab ☁️</title>
     <link rel="icon" type="image/png" href="assets/icon-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
@@ -45,15 +45,11 @@
                 </button>
                 <button class="mode-card mode-review" id="open-review">
                     <span class="mode-emoji">🔁</span><strong>Review</strong>
-                    <span>สุ่มคำเก่าที่ยังจำไม่ได้ 25 คำ</span>
-                </button>
-                <button class="mode-card mode-review-all" id="open-review-all">
-                    <span class="mode-emoji">🔄</span><strong>Review All</strong>
-                    <span>คำเก่าที่ยังจำไม่ได้ทั้งหมด</span>
+                    <span>คำเก่าที่ยังจำไม่ได้ · 25 / 35 / All</span>
                 </button>
                 <button class="mode-card mode-known" id="open-known">
                     <span class="mode-emoji">⭐</span><strong>Practice Known</strong>
-                    <span>ทดสอบคำที่จำได้แล้ว</span>
+                    <span>ฝึกคำที่จำได้ · 25 / 35 / All</span>
                 </button>
                 <button class="mode-card mode-all" id="open-all">
                     <span class="mode-emoji">📚</span><strong>All Words</strong>
@@ -64,6 +60,30 @@
                 <div class="section-head"><h2>Today's little plan <span>♡</span></h2></div>
                 <p id="date-summary" class="note">กำลังโหลดคำศัพท์...</p>
                 <p class="message" id="home-message" role="status"></p>
+            </div>
+        </section>
+
+        <section class="screen hidden" id="setup">
+            <div class="game-top"><button class="mini-button" id="setup-home">⌂ Home</button></div>
+            <div class="settings-panel practice-setup">
+                <span class="eyebrow">✧ CHOOSE YOUR PRACTICE ✧</span>
+                <h2 id="setup-title">📖 New Words</h2>
+                <p id="setup-description" class="note"></p>
+                <div id="setup-count-wrap">
+                    <h3>จำนวนคำที่ต้องการฝึก</h3>
+                    <div class="setup-choices" id="setup-counts">
+                        <button type="button" class="choice" data-count="25">25 คำ</button>
+                        <button type="button" class="choice" data-count="35">35 คำ</button>
+                        <button type="button" class="choice" data-count="all">All</button>
+                    </div>
+                </div>
+                <h3>รูปแบบคำถาม</h3>
+                <div class="setup-choices" id="setup-directions">
+                    <button type="button" class="choice" data-direction="en">🇺🇸 English → ไทย</button>
+                    <button type="button" class="choice" data-direction="th">🇹🇭 ไทย → English</button>
+                    <button type="button" class="choice" data-direction="mixed">🎲 สุ่มคละกัน</button>
+                </div>
+                <button type="button" class="big-button setup-start" id="setup-start">Start learning ♡</button>
             </div>
         </section>
 
@@ -78,13 +98,14 @@
                 <div class="card-decor" id="card-decor">☁️</div>
                 <div class="flashcard">
                     <div class="card-tag" id="card-category"></div>
+                    <div class="direction-label" id="card-direction"></div>
                     <div class="word" id="word"></div>
                     <div class="ipa" id="ipa"></div>
                     <div class="part" id="part"></div>
                     <button class="sound-button" id="speak" type="button">🔊 Listen US</button>
                     <div class="card-memory-wrap">ความจำ: <span id="card-memory" class="memory-select"></span></div>
                     <div class="answer hidden" id="answer">
-                        <div class="answer-divider">✧ meaning ✧</div>
+                        <div class="answer-divider" id="answer-divider">✧ meaning ✧</div>
                         <h2 id="meaning"></h2>
                         <div class="verb-forms hidden" id="verb-forms"></div>
                         <div class="examples" id="examples"></div>

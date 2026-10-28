@@ -20,6 +20,10 @@ let words = [];
 let deck = [];
 let cursor = 0;
 let gameMode = "new";
+let selectedMode = "new";
+let selectedCount = "25";
+let selectedDirection = "mixed";
+let cardDirections = [];
 let scheduledWords = [];
 let tablePage = 0;
 let wordTableFilter = "all";
@@ -85,28 +89,30 @@ function orderedLearningWords() {
 }
 
 function getWordSchedule() {
-    // Stable set membership: NEVER filter known before slicing into sets.
-    const ordered = scheduledWords;
+    // Dynamic queue: filter known FIRST, then partition by 10-day sets.
+    // Every enabled unknown word is in exactly one of: Review, New, Upcoming.
+    const ordered = scheduledWords.filter(w => !truth(w.known));
     const index = currentSetIndex();
     const start = index * WORDS_PER_SET;
     const end = start + WORDS_PER_SET;
-    const currentAll = ordered.slice(start, end);
-    const olderAll = ordered.slice(0, start);
     return {
-        ordered, currentAll, olderAll,
-        current: currentAll.filter(w => !truth(w.known)),
-        older: olderAll.filter(w => !truth(w.known)),
-        start, end
+        ordered, current: ordered.slice(start, end), older: ordered.slice(0, start),
+        upcoming: ordered.slice(end), start, end
     };
 }
 
 function getNewWords() { return shuffle([...getWordSchedule().current]); }
-function getReviewWords() { return shuffle([...getWordSchedule().older]).slice(0, WORDS_PER_SET); }
-function getReviewAllWords() { return shuffle([...getWordSchedule().older]); }
-function getKnownWords() { return shuffle(words.filter(w => truth(w.enabled) && truth(w.known))); }
+function getReviewWords(count = 25) {
+    const older = shuffle([...getWordSchedule().older]);
+    return count === "all" ? older : older.slice(0, Number(count));
+}
+function getKnownWords(count = 25) {
+    const known = shuffle(words.filter(w => truth(w.enabled) && truth(w.known)));
+    return count === "all" ? known : known.slice(0, Number(count));
+}
 
 function show(id) {
-    ["home", "game", "complete", "all-words"].forEach(page => {
+    ["home", "setup", "game", "complete", "all-words"].forEach(page => {
         $(page).classList.toggle("hidden", page !== id);
     });
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -133,26 +139,55 @@ function speakText(text) {
 
 function refreshHome() {
     const setIndex = currentSetIndex();
-    const { current, older, currentAll } = getWordSchedule();
-    $("new-set-label").textContent = `Set ${setIndex + 1} · เหลือ ${current.length}/${currentAll.length} คำ / 10 วัน`;
-    $("date-summary").textContent = `Set ${setIndex + 1} · คำใหม่ ${current.length} คำ (กระจายทุกหมวด) · คำเก่า ${older.length} คำ · เริ่ม 24 Oct 2026`;
+    const { current, older, upcoming } = getWordSchedule();
+    $("new-set-label").textContent = `Set ${setIndex + 1} · ${current.length}/25 คำ · 10 วัน`;
+    $("date-summary").textContent = `Set ${setIndex + 1} · New ${current.length} คำ · Review ${older.length} คำ · รอเรียน ${upcoming.length} คำ · เริ่ม 24 Oct 2026`;
 }
 
-function start(mode) {
+function openSetup(mode) {
+    stopSpeech();
+    selectedMode = mode;
+    selectedCount = "25";
+    selectedDirection = "mixed";
+    $("setup-title").textContent = mode === "new" ? "📖 New Words" : mode === "review" ? "🔁 Review" : "⭐ Practice Known";
+    $("setup-count-wrap").classList.toggle("hidden", mode === "new");
+    $("setup-description").textContent = mode === "new"
+        ? "25 คำที่ยังจำไม่ได้ใน Set ปัจจุบัน (อาจน้อยลงเมื่อคำศัพท์ใกล้หมด)"
+        : mode === "review" ? "สุ่มคำที่ยังจำไม่ได้จาก Set ก่อนหน้า" : "สุ่มคำที่ทำเครื่องหมาย known = TRUE";
+    updateSetupButtons();
+    show("setup");
+}
+
+function updateSetupButtons() {
+    document.querySelectorAll("[data-count]").forEach(button => {
+        const active = button.dataset.count === selectedCount;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+    });
+    document.querySelectorAll("[data-direction]").forEach(button => {
+        const active = button.dataset.direction === selectedDirection;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+    });
+}
+
+function start(mode = selectedMode) {
     stopSpeech();
     gameMode = mode;
-    deck = mode === "review" ? getReviewWords()
-        : mode === "review-all" ? getReviewAllWords()
-        : mode === "known" ? getKnownWords() : getNewWords();
+    deck = mode === "review" ? getReviewWords(selectedCount)
+        : mode === "known" ? getKnownWords(selectedCount) : getNewWords();
     if (!deck.length) {
         $("home-message").textContent = mode === "known"
             ? "ยังไม่มีคำศัพท์ที่ทำเครื่องหมายว่าจำได้ ♡"
-            : (mode === "review" || mode === "review-all")
-            ? "ยังไม่มีคำศัพท์เก่าที่ต้องทบทวน ♡"
+            : mode === "review" ? "ยังไม่มีคำศัพท์เก่าที่ต้องทบทวน ♡"
             : "ไม่มีคำศัพท์ที่ต้องเรียนใน Set นี้แล้ว ♡";
         show("home");
         return;
     }
+    // Mixed is balanced per session, but randomly assigned per card.
+    cardDirections = selectedDirection === "mixed"
+        ? shuffle(deck.map((_, i) => i % 2 === 0 ? "en" : "th"))
+        : deck.map(() => selectedDirection);
     $("home-message").textContent = "";
     cursor = 0;
     show("game");
@@ -164,15 +199,19 @@ function txt(id, value) { $(id).textContent = value || ""; }
 function renderCard() {
     const word = deck[cursor];
     $("card-memory").textContent = learningState(word) === "known" ? "✓ จำได้" : "↻ ยังจำไม่ได้";
-    txt("progress-label", `${gameMode === "review" ? "Review 25" : gameMode === "review-all" ? "Review All" : gameMode === "known" ? "Known Words" : "New Words"} · ${cursor + 1} / ${deck.length}`);
+    txt("progress-label", `${gameMode === "review" ? "Review" : gameMode === "known" ? "Practice Known" : "New Words"} · ${cursor + 1} / ${deck.length}`);
     $("progress-fill").style.width = `${100 * (cursor + 1) / deck.length}%`;
     const category = categories.find(item => item.id === word.category);
     txt("card-decor", category?.emoji || "☁️");
     txt("card-category", category?.name || word.category);
-    txt("word", word.word);
-    txt("ipa", word.ipa_us);
-    txt("part", word.pos);
-    txt("meaning", word.meaning_th);
+    const thaiFirst = cardDirections[cursor] === "th";
+    txt("word", thaiFirst ? word.meaning_th : word.word);
+    txt("ipa", thaiFirst ? "" : word.ipa_us);
+    txt("part", thaiFirst ? "" : word.pos);
+    txt("meaning", thaiFirst ? word.word : word.meaning_th);
+    txt("answer-divider", thaiFirst ? "✧ English answer ✧" : "✧ meaning ✧");
+    $("speak").classList.toggle("hidden", thaiFirst);
+    $("card-direction").textContent = thaiFirst ? "ไทย → อังกฤษ" : "English → Thai";
     $("answer").classList.add("hidden");
     $("reveal").classList.remove("hidden");
 
@@ -206,7 +245,19 @@ function renderCard() {
         $("examples").append(box);
     }
     txt("next", cursor === deck.length - 1 ? "Finish round ✨" : "Next word ➜");
-    speakText(word.word);
+    if (!thaiFirst) speakText(word.word);
+}
+
+function revealAnswer() {
+    if (!$("answer").classList.contains("hidden")) return;
+    $("answer").classList.remove("hidden");
+    $("reveal").classList.add("hidden");
+    if (cardDirections[cursor] === "th") {
+        txt("ipa", deck[cursor].ipa_us);
+        txt("part", deck[cursor].pos);
+        $("speak").classList.remove("hidden");
+        speakText(deck[cursor].word);
+    }
 }
 
 function next() {
@@ -223,8 +274,8 @@ function next() {
 function getFilteredWords() {
     const search = $("word-search").value.trim().toLocaleLowerCase();
     const schedule = getWordSchedule();
-    const newRows = new Set(schedule.currentAll.map(w => w.rowNumber));
-    const oldRows = new Set(schedule.olderAll.map(w => w.rowNumber));
+    const newRows = new Set(schedule.current.map(w => w.rowNumber));
+    const oldRows = new Set(schedule.older.map(w => w.rowNumber));
     return words.filter(word => {
         const inSet = wordTableFilter === "all" ||
             (wordTableFilter === "known" && learningState(word) === "known") ||
@@ -244,8 +295,8 @@ function renderTable() {
     const body = $("word-rows");
     body.replaceChildren();
     const schedule = getWordSchedule();
-    const newRows = new Set(schedule.currentAll.map(w => w.rowNumber));
-    const oldRows = new Set(schedule.olderAll.map(w => w.rowNumber));
+    const newRows = new Set(schedule.current.map(w => w.rowNumber));
+    const oldRows = new Set(schedule.older.map(w => w.rowNumber));
     for (const word of pageWords) {
         const tr = document.createElement("tr");
         for (const value of [word.word, word.pos, word.meaning_th]) {
@@ -297,14 +348,27 @@ async function load() {
         refreshHome();
     } catch (error) {
         $("home-message").textContent = `อ่าน vocabulary.csv ไม่สำเร็จ: ${error.message} (ต้องเปิดผ่านเว็บเซิร์ฟเวอร์)`;
-        ["open-new", "open-review", "open-review-all", "open-known", "open-all"].forEach(id => $(id).disabled = true);
+        ["open-new", "open-review", "open-known", "open-all"].forEach(id => $(id).disabled = true);
     }
 }
 
-$("open-new").addEventListener("click", () => start("new"));
-$("open-review").addEventListener("click", () => start("review"));
-$("open-review-all").addEventListener("click", () => start("review-all"));
-$("open-known").addEventListener("click", () => start("known"));
+$("open-new").addEventListener("click", () => openSetup("new"));
+$("open-review").addEventListener("click", () => openSetup("review"));
+$("open-known").addEventListener("click", () => openSetup("known"));
+$("setup-home").addEventListener("click", () => show("home"));
+$("setup-start").addEventListener("click", () => start(selectedMode));
+$("setup-counts").addEventListener("click", event => {
+    const button = event.target.closest("[data-count]");
+    if (!button) return;
+    selectedCount = button.dataset.count;
+    updateSetupButtons();
+});
+$("setup-directions").addEventListener("click", event => {
+    const button = event.target.closest("[data-direction]");
+    if (!button) return;
+    selectedDirection = button.dataset.direction;
+    updateSetupButtons();
+});
 $("open-all").addEventListener("click", () => { stopSpeech(); tablePage = 0; renderTable(); show("all-words"); });
 $("go-home").addEventListener("click", () => { stopSpeech(); refreshHome(); show("home"); });
 $("all-home").addEventListener("click", () => { stopSpeech(); refreshHome(); show("home"); });
@@ -326,11 +390,10 @@ document.addEventListener("keydown", event => {
         next();
     } else if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
-        $("answer").classList.remove("hidden");
-        $("reveal").classList.add("hidden");
+        revealAnswer();
     }
 });
-$("reveal").addEventListener("click", () => { $("answer").classList.remove("hidden"); $("reveal").classList.add("hidden"); });
+$("reveal").addEventListener("click", revealAnswer);
 $("speak").addEventListener("click", () => speakText(deck[cursor]?.word));
 $("word-filter").addEventListener("click", event => {
     const button = event.target.closest("[data-word-filter]");
@@ -350,7 +413,7 @@ $("page-next").addEventListener("click", () => { tablePage++; renderTable(); });
 
 refreshHome();
 load();
-// v17: No app-managed persistent storage. Unregister older workers and
+// v18: No app-managed persistent storage. Unregister older workers and
 // delete only caches belonging to Cloud Candy (never other projects).
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {

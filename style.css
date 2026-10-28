@@ -868,3 +868,15 @@ footer {
 /* v17 extra practice modes */
 .mode-review-all { background:#dcf6e9; }
 .mode-known { background:#fff0c5; }
+
+/* v18: four paths, pre-practice settings and bilingual prompts */
+.mode-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.practice-setup { max-width:620px; margin:25px auto; padding:30px; text-align:center; }
+.practice-setup h2 { font-size:clamp(25px,5vw,34px); margin:12px 0; }
+.practice-setup h3 { margin:24px 0 12px; font-size:16px; }
+.setup-choices { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+.setup-choices .choice { padding:12px 16px; border-radius:17px; border:2px solid #ebddf0; background:white; color:#78688e; font:inherit; font-weight:800; cursor:pointer; }
+.setup-choices .choice.active { background:#e4d8ff; border-color:#ae93e6; color:#584778; }
+.setup-start { margin:30px auto 0; }
+.direction-label { margin-top:12px; color:#a48bb1; font-size:12px; font-weight:800; }
+@media (max-width:650px) { .practice-setup { padding:23px 14px; } .mode-card { min-height:145px; } }
