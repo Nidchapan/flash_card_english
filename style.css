@@ -860,3 +860,11 @@ footer {
 .memory-select { display:inline-block; border-radius:16px; padding:6px 10px; font-weight:800; font-size:12px; background:#f5effa; }
 .memory-known { background:#dcf6e9; color:#437c65; }
 .memory-learning { background:#fff0dc; color:#9c7854; }
+
+/* Desktop keyboard shortcut hint */
+.keyboard-hint { text-align:center; font-size:12px; color:#a49cae; margin:18px auto 0; }
+@media (pointer:coarse) { .keyboard-hint { display:none; } }
+
+/* v17 extra practice modes */
+.mode-review-all { background:#dcf6e9; }
+.mode-known { background:#fff0c5; }

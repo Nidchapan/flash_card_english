@@ -20,6 +20,7 @@ let words = [];
 let deck = [];
 let cursor = 0;
 let gameMode = "new";
+let scheduledWords = [];
 let tablePage = 0;
 let wordTableFilter = "all";
 const norm = value => String(value ?? "").trim();
@@ -84,15 +85,25 @@ function orderedLearningWords() {
 }
 
 function getWordSchedule() {
-    const ordered = orderedLearningWords().filter(w => !truth(w.known));
+    // Stable set membership: NEVER filter known before slicing into sets.
+    const ordered = scheduledWords;
     const index = currentSetIndex();
     const start = index * WORDS_PER_SET;
     const end = start + WORDS_PER_SET;
-    return { ordered, current: ordered.slice(start, end), older: ordered.slice(0, start), start, end };
+    const currentAll = ordered.slice(start, end);
+    const olderAll = ordered.slice(0, start);
+    return {
+        ordered, currentAll, olderAll,
+        current: currentAll.filter(w => !truth(w.known)),
+        older: olderAll.filter(w => !truth(w.known)),
+        start, end
+    };
 }
 
-function getNewWords() { return getWordSchedule().current; }
+function getNewWords() { return shuffle([...getWordSchedule().current]); }
 function getReviewWords() { return shuffle([...getWordSchedule().older]).slice(0, WORDS_PER_SET); }
+function getReviewAllWords() { return shuffle([...getWordSchedule().older]); }
+function getKnownWords() { return shuffle(words.filter(w => truth(w.enabled) && truth(w.known))); }
 
 function show(id) {
     ["home", "game", "complete", "all-words"].forEach(page => {
@@ -122,19 +133,23 @@ function speakText(text) {
 
 function refreshHome() {
     const setIndex = currentSetIndex();
-    const { current, older } = getWordSchedule();
-    $("new-set-label").textContent = `Set ${setIndex + 1} · ${current.length} คำ / 10 วัน`;
+    const { current, older, currentAll } = getWordSchedule();
+    $("new-set-label").textContent = `Set ${setIndex + 1} · เหลือ ${current.length}/${currentAll.length} คำ / 10 วัน`;
     $("date-summary").textContent = `Set ${setIndex + 1} · คำใหม่ ${current.length} คำ (กระจายทุกหมวด) · คำเก่า ${older.length} คำ · เริ่ม 24 Oct 2026`;
 }
 
 function start(mode) {
     stopSpeech();
     gameMode = mode;
-    deck = mode === "review" ? getReviewWords() : getNewWords();
+    deck = mode === "review" ? getReviewWords()
+        : mode === "review-all" ? getReviewAllWords()
+        : mode === "known" ? getKnownWords() : getNewWords();
     if (!deck.length) {
-        $("home-message").textContent = mode === "review"
-            ? "ยังไม่มีคำศัพท์จาก Set ก่อนหน้าให้ทบทวน ♡"
-            : "ยังไม่มีคำศัพท์ใน Set ปัจจุบัน ลองเพิ่มคำศัพท์ใน vocabulary.csv ก่อนนะ ♡";
+        $("home-message").textContent = mode === "known"
+            ? "ยังไม่มีคำศัพท์ที่ทำเครื่องหมายว่าจำได้ ♡"
+            : (mode === "review" || mode === "review-all")
+            ? "ยังไม่มีคำศัพท์เก่าที่ต้องทบทวน ♡"
+            : "ไม่มีคำศัพท์ที่ต้องเรียนใน Set นี้แล้ว ♡";
         show("home");
         return;
     }
@@ -149,7 +164,7 @@ function txt(id, value) { $(id).textContent = value || ""; }
 function renderCard() {
     const word = deck[cursor];
     $("card-memory").textContent = learningState(word) === "known" ? "✓ จำได้" : "↻ ยังจำไม่ได้";
-    txt("progress-label", `${gameMode === "review" ? "Review" : "New Words"} · ${cursor + 1} / ${deck.length}`);
+    txt("progress-label", `${gameMode === "review" ? "Review 25" : gameMode === "review-all" ? "Review All" : gameMode === "known" ? "Known Words" : "New Words"} · ${cursor + 1} / ${deck.length}`);
     $("progress-fill").style.width = `${100 * (cursor + 1) / deck.length}%`;
     const category = categories.find(item => item.id === word.category);
     txt("card-decor", category?.emoji || "☁️");
@@ -208,8 +223,8 @@ function next() {
 function getFilteredWords() {
     const search = $("word-search").value.trim().toLocaleLowerCase();
     const schedule = getWordSchedule();
-    const newRows = new Set(schedule.current.map(w => w.rowNumber));
-    const oldRows = new Set(schedule.older.map(w => w.rowNumber));
+    const newRows = new Set(schedule.currentAll.map(w => w.rowNumber));
+    const oldRows = new Set(schedule.olderAll.map(w => w.rowNumber));
     return words.filter(word => {
         const inSet = wordTableFilter === "all" ||
             (wordTableFilter === "known" && learningState(word) === "known") ||
@@ -229,8 +244,8 @@ function renderTable() {
     const body = $("word-rows");
     body.replaceChildren();
     const schedule = getWordSchedule();
-    const newRows = new Set(schedule.current.map(w => w.rowNumber));
-    const oldRows = new Set(schedule.older.map(w => w.rowNumber));
+    const newRows = new Set(schedule.currentAll.map(w => w.rowNumber));
+    const oldRows = new Set(schedule.olderAll.map(w => w.rowNumber));
     for (const word of pageWords) {
         const tr = document.createElement("tr");
         for (const value of [word.word, word.pos, word.meaning_th]) {
@@ -276,15 +291,20 @@ async function load() {
         words = parseCSV(await response.text()).map((word, index) => ({ ...word, rowNumber: index + 1 }));
         if (!words.length) throw Error("CSV is empty");
         if (!("known" in words[0])) throw Error("ไม่พบคอลัมน์ known ใน vocabulary.csv");
+        const ids = words.map(w => w.id).filter(Boolean);
+        if (new Set(ids).size !== ids.length) throw Error("พบ id ซ้ำใน vocabulary.csv");
+        scheduledWords = orderedLearningWords();
         refreshHome();
     } catch (error) {
         $("home-message").textContent = `อ่าน vocabulary.csv ไม่สำเร็จ: ${error.message} (ต้องเปิดผ่านเว็บเซิร์ฟเวอร์)`;
-        ["open-new", "open-review", "open-all"].forEach(id => $(id).disabled = true);
+        ["open-new", "open-review", "open-review-all", "open-known", "open-all"].forEach(id => $(id).disabled = true);
     }
 }
 
 $("open-new").addEventListener("click", () => start("new"));
 $("open-review").addEventListener("click", () => start("review"));
+$("open-review-all").addEventListener("click", () => start("review-all"));
+$("open-known").addEventListener("click", () => start("known"));
 $("open-all").addEventListener("click", () => { stopSpeech(); tablePage = 0; renderTable(); show("all-words"); });
 $("go-home").addEventListener("click", () => { stopSpeech(); refreshHome(); show("home"); });
 $("all-home").addEventListener("click", () => { stopSpeech(); refreshHome(); show("home"); });
@@ -292,6 +312,24 @@ $("finish-home").addEventListener("click", () => { refreshHome(); show("home"); 
 $("restart").addEventListener("click", () => start(gameMode));
 $("again").addEventListener("click", () => start(gameMode));
 $("next").addEventListener("click", next);
+
+// Desktop keyboard shortcuts, active only during flashcard practice.
+document.addEventListener("keydown", event => {
+    if ($("game").classList.contains("hidden")) return;
+    if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
+    const target = event.target;
+    if (target instanceof HTMLElement && (target.isContentEditable ||
+        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+
+    if (event.key === "ArrowRight") {
+        event.preventDefault();
+        next();
+    } else if (event.code === "Space" || event.key === " ") {
+        event.preventDefault();
+        $("answer").classList.remove("hidden");
+        $("reveal").classList.add("hidden");
+    }
+});
 $("reveal").addEventListener("click", () => { $("answer").classList.remove("hidden"); $("reveal").classList.add("hidden"); });
 $("speak").addEventListener("click", () => speakText(deck[cursor]?.word));
 $("word-filter").addEventListener("click", event => {
@@ -312,6 +350,18 @@ $("page-next").addEventListener("click", () => { tablePage++; renderTable(); });
 
 refreshHome();
 load();
+// v17: No app-managed persistent storage. Unregister older workers and
+// delete only caches belonging to Cloud Candy (never other projects).
 if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+    window.addEventListener("load", async () => {
+        try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            const scope = new URL("./", location.href).href;
+            await Promise.all(registrations.filter(r => r.scope === scope).map(r => r.unregister()));
+            if ("caches" in window) {
+                const keys = await caches.keys();
+                await Promise.all(keys.filter(k => k.startsWith("cloud-candy-vocab-")).map(k => caches.delete(k)));
+            }
+        } catch (error) { console.warn("Legacy cache cleanup:", error); }
+    });
 }
