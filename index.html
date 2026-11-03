@@ -55,6 +55,10 @@
                     <span class="mode-emoji">📚</span><strong>All Words</strong>
                     <span>ค้นหาคำศัพท์ทั้งหมด</span>
                 </button>
+                <button class="mode-card mode-dialogue" id="open-dialogue">
+                    <span class="mode-emoji">💬</span><strong>Game Dialogues</strong>
+                    <span>บทสนทนาในเกม · English / ไทย</span>
+                </button>
             </div>
             <div class="settings-panel home-summary">
                 <div class="section-head"><h2>Today's little plan <span>♡</span></h2></div>
@@ -142,6 +146,28 @@
                     <button class="mini-button" id="page-prev">← Prev</button>
                     <span id="page-label" class="muted"></span>
                     <button class="mini-button" id="page-next">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="screen hidden" id="dialogue-list">
+            <div class="game-top">
+                <button class="mini-button" id="dialogue-home">⌂ Home</button>
+                <div class="progress-label">💬 Game Dialogues</div>
+            </div>
+            <div class="all-panel">
+                <input id="dialogue-search" class="word-search" type="search" placeholder="🔎 ค้นหาบทสนทนา / คำแปล..." aria-label="ค้นหาบทสนทนา">
+                <p id="dialogue-count" class="muted" role="status">กำลังโหลด...</p>
+                <div class="table-scroll">
+                    <table class="vocab-table dialogue-table">
+                        <thead><tr><th>English dialogue</th><th>คำแปลไทย</th><th>เสียง</th></tr></thead>
+                        <tbody id="dialogue-rows"></tbody>
+                    </table>
+                </div>
+                <div class="table-pager">
+                    <button class="mini-button" id="dialogue-prev">← Prev</button>
+                    <span id="dialogue-page-label" class="muted"></span>
+                    <button class="mini-button" id="dialogue-next">Next →</button>
                 </div>
             </div>
         </section>

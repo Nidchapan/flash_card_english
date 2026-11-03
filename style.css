@@ -880,3 +880,13 @@ footer {
 .setup-start { margin:30px auto 0; }
 .direction-label { margin-top:12px; color:#a48bb1; font-size:12px; font-weight:800; }
 @media (max-width:650px) { .practice-setup { padding:23px 14px; } .mode-card { min-height:145px; } }
+
+/* Separate game-dialogue page */
+.mode-dialogue { background:linear-gradient(125deg,#dcf6e9,#dcecff); }
+.dialogue-table { table-layout:fixed; }
+.dialogue-table th:first-child { width:48%; }
+.dialogue-table th:nth-child(2) { width:43%; }
+.dialogue-table th:last-child { width:9%; }
+.dialogue-table td { white-space:normal; overflow-wrap:anywhere; vertical-align:top; line-height:1.65; }
+.dialogue-table td:first-child { font-weight:700; }
+@media(max-width:650px) { .dialogue-table th:first-child { width:46%; } .dialogue-table th:nth-child(2) { width:42%; } .dialogue-table th:last-child { width:12%; } }

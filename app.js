@@ -112,7 +112,7 @@ function getKnownWords(count = 25) {
 }
 
 function show(id) {
-    ["home", "setup", "game", "complete", "all-words"].forEach(page => {
+    ["home", "setup", "game", "complete", "all-words", "dialogue-list"].forEach(page => {
         $(page).classList.toggle("hidden", page !== id);
     });
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -428,3 +428,63 @@ if ("serviceWorker" in navigator) {
         } catch (error) { console.warn("Legacy cache cleanup:", error); }
     });
 }
+
+
+// Standalone game-dialogue table. Existing vocabulary and learning logic unchanged.
+let dialogueRows = [];
+let dialoguePage = 0;
+const DIALOGUE_PAGE_SIZE = 50;
+let dialogueLoaded = false;
+async function openDialogues() {
+    stopSpeech();
+    show("dialogue-list");
+    if (!dialogueLoaded) {
+        try {
+            const response = await fetch("localization_en_th.csv", { cache: "no-cache" });
+            if (!response.ok) throw Error(`HTTP ${response.status}`);
+            dialogueRows = parseCSV(await response.text()).filter(row => row.english.includes(":"));
+            dialogueLoaded = true;
+        } catch (error) {
+            $("dialogue-count").textContent = `โหลดบทสนทนาไม่สำเร็จ: ${error.message}`;
+            return;
+        }
+    }
+    dialoguePage = 0;
+    renderDialogues();
+}
+function renderDialogues() {
+    const query = $("dialogue-search").value.trim().toLocaleLowerCase();
+    const matches = dialogueRows.filter(row =>
+        [row.english, row.thai].some(value => norm(value).toLocaleLowerCase().includes(query)));
+    const pages = Math.max(1, Math.ceil(matches.length / DIALOGUE_PAGE_SIZE));
+    dialoguePage = Math.max(0, Math.min(dialoguePage, pages - 1));
+    const tbody = $("dialogue-rows");
+    tbody.replaceChildren();
+    for (const row of matches.slice(dialoguePage * DIALOGUE_PAGE_SIZE, (dialoguePage + 1) * DIALOGUE_PAGE_SIZE)) {
+        const tr = document.createElement("tr");
+        for (const value of [row.english, row.thai]) {
+            const td = document.createElement("td");
+            td.textContent = value || "—";
+            tr.append(td);
+        }
+        const td = document.createElement("td");
+        const sound = document.createElement("button");
+        sound.type = "button";
+        sound.className = "table-sound";
+        sound.textContent = "🔊";
+        sound.setAttribute("aria-label", `ฟัง ${row.english}`);
+        sound.addEventListener("click", () => speakText(row.english));
+        td.append(sound);
+        tr.append(td);
+        tbody.append(tr);
+    }
+    $("dialogue-count").textContent = `พบ ${matches.length.toLocaleString()} บรรทัด (เฉพาะ English ที่มี :)`;
+    $("dialogue-page-label").textContent = `${dialoguePage + 1} / ${pages}`;
+    $("dialogue-prev").disabled = dialoguePage === 0;
+    $("dialogue-next").disabled = dialoguePage >= pages - 1;
+}
+$("open-dialogue").addEventListener("click", openDialogues);
+$("dialogue-home").addEventListener("click", () => { stopSpeech(); refreshHome(); show("home"); });
+$("dialogue-search").addEventListener("input", () => { dialoguePage = 0; renderDialogues(); });
+$("dialogue-prev").addEventListener("click", () => { dialoguePage--; renderDialogues(); });
+$("dialogue-next").addEventListener("click", () => { dialoguePage++; renderDialogues(); });
