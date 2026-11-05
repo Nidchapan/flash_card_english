@@ -900,3 +900,22 @@ footer {
 #game .examples-panel h3 { text-align: center; margin: 0; font-size: 15px; color: #a277a9; }
 #game .examples-panel .examples { margin-top: 10px; }
 @media (max-width: 650px) { #game .examples-panel { padding: 14px 17px; } }
+
+/* Desktop: keep examples visible alongside the card, without changing phone layout. */
+@media (min-width: 851px) {
+    #game {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+        column-gap: 22px;
+        align-items: start;
+    }
+    #game > .game-top, #game > .progress-track { grid-column: 1 / -1; }
+    #game > .card-wrap { grid-column: 1; grid-row: 3; width: 100%; min-width: 0; }
+    #game > .game-actions { grid-column: 1; grid-row: 4; width: 100%; }
+    #game > .keyboard-hint { grid-column: 1; grid-row: 5; }
+    #game > .examples-panel {
+        grid-column: 2; grid-row: 3 / span 3;
+        width: 100%; min-width: 0; margin: 0;
+    }
+    #game .flashcard { padding: 30px 20px 25px; }
+}
