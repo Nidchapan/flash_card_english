@@ -213,6 +213,7 @@ function renderCard() {
     $("speak").classList.toggle("hidden", thaiFirst);
     $("card-direction").textContent = thaiFirst ? "ไทย → อังกฤษ" : "English → Thai";
     $("answer").classList.add("hidden");
+    $("examples-panel").classList.add("hidden");
     $("reveal").classList.remove("hidden");
 
     const forms = [word.v1, word.v2, word.v3, word.future];
@@ -244,14 +245,16 @@ function renderCard() {
         box.append(line, translation);
         $("examples").append(box);
     }
-    txt("next", cursor === deck.length - 1 ? "Finish round ✨" : "Next word ➜");
+    txt("next", "Reveal answer ♡");
     if (!thaiFirst) speakText(word.word);
 }
 
 function revealAnswer() {
     if (!$("answer").classList.contains("hidden")) return;
     $("answer").classList.remove("hidden");
+    $("examples-panel").classList.remove("hidden");
     $("reveal").classList.add("hidden");
+    txt("next", cursor === deck.length - 1 ? "Finish round ✨" : "Next word ➜");
     if (cardDirections[cursor] === "th") {
         txt("ipa", deck[cursor].ipa_us);
         txt("part", deck[cursor].pos);
@@ -261,6 +264,10 @@ function revealAnswer() {
 }
 
 function next() {
+    if ($("answer").classList.contains("hidden")) {
+        revealAnswer();
+        return;
+    }
     stopSpeech();
     if (cursor + 1 >= deck.length) {
         txt("finish-text", `คุณเรียนครบ ${deck.length} คำแล้ว! กลับมาทบทวนได้ทุกเมื่อ ♡`);

@@ -890,3 +890,13 @@ footer {
 .dialogue-table td { white-space:normal; overflow-wrap:anywhere; vertical-align:top; line-height:1.65; }
 .dialogue-table td:first-child { font-weight:700; }
 @media(max-width:650px) { .dialogue-table th:first-child { width:46%; } .dialogue-table th:nth-child(2) { width:42%; } .dialogue-table th:last-child { width:12%; } }
+
+/* v19: Keep the primary action above examples for repeated practice. */
+#game .flashcard { min-height: 0; }
+#game .game-actions { margin: 14px auto 0; }
+#game .game-actions .big-button { margin-top: 0; }
+#game .keyboard-hint { text-align: center; margin: 12px auto; font-size: 12px; }
+#game .examples-panel { max-width: 680px; margin: 16px auto 0; padding: 18px 24px; border-radius: 26px; background: #ffffffde; border: 2px solid #fff1f7; box-shadow: var(--shadow); }
+#game .examples-panel h3 { text-align: center; margin: 0; font-size: 15px; color: #a277a9; }
+#game .examples-panel .examples { margin-top: 10px; }
+@media (max-width: 650px) { #game .examples-panel { padding: 14px 17px; } }
