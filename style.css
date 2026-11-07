@@ -919,3 +919,31 @@ footer {
     }
     #game .flashcard { padding: 30px 20px 25px; }
 }
+
+/* v20 — centered practice, stable thumb target */
+#game { display:flex; flex-direction:column; align-items:center; width:100%; }
+#game > .game-top, #game > .progress-track { width:100%; }
+#game > .card-wrap, #game > .game-actions, #game > .keyboard-hint,
+#game > .examples-panel { width:100%; max-width:520px; }
+#game > .card-wrap { margin:0 auto; }
+#game .flashcard {
+  height:440px; min-height:440px; overflow-y:auto; overscroll-behavior:contain;
+  scrollbar-width:thin; padding:30px 24px 22px;
+}
+#game .game-actions { margin:14px auto 0; }
+#game .game-actions .big-button { min-height:58px; margin:0; }
+#game .examples-panel { margin:20px auto 0; }
+#game .keyboard-hint { margin:12px auto 0; }
+@media (min-width:851px) {
+  #game { display:flex; grid-template-columns:none; }
+  #game > .card-wrap, #game > .game-actions, #game > .keyboard-hint,
+  #game > .examples-panel { grid-column:auto; grid-row:auto; }
+  #game > .examples-panel { margin:20px auto 0; }
+}
+@media (max-width:650px) {
+  #game .flashcard { height:400px; min-height:400px; padding:27px 16px 20px; }
+  #game > .card-wrap, #game > .game-actions, #game > .examples-panel { max-width:100%; }
+}
+@media (max-height:700px) and (min-width:651px) {
+  #game .flashcard { height:360px; min-height:360px; }
+}

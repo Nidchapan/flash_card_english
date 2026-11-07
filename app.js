@@ -1,7 +1,7 @@
 "use strict";
 
 // Permanent learning calendar. Change manually only when you want a new schedule.
-const START_DATE = "2026-10-24";
+const START_DATE = "2026-11-07";
 const DAYS_PER_SET = 10;
 const WORDS_PER_SET = 25;
 const TABLE_PAGE_SIZE = 50;
