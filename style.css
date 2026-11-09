@@ -977,3 +977,13 @@ footer {
   #game .game-actions { margin-top:10px; }
   #game .game-actions .big-button { min-height:54px; padding:12px 20px; }
 }
+
+/* v22 — one permanent thumb target for Reveal answer / Next word */
+#game #reveal { display:none !important; } /* #next already handles both actions */
+#game .game-actions { position:fixed; left:50%; bottom:calc(12px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); width:min(520px, calc(100vw - 30px)); max-width:none; margin:0; z-index:30; }
+#game .game-actions .big-button { min-height:58px; margin:0; box-shadow:0 6px 0 #d4a6d3,0 10px 24px #caa5cf66; }
+#game { padding-bottom:calc(112px + env(safe-area-inset-bottom, 0px)); }
+@media (max-width:650px) {
+  #game .game-actions { bottom:calc(10px + env(safe-area-inset-bottom, 0px)); }
+  #game .game-actions .big-button { min-height:56px; }
+}
