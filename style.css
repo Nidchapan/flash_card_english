@@ -947,3 +947,33 @@ footer {
 @media (max-height:700px) and (min-width:651px) {
   #game .flashcard { height:360px; min-height:360px; }
 }
+
+/* v21 — no clipped answer; compact responsive practice card */
+#game .flashcard {
+  height:auto;
+  min-height:0;
+  max-height:none;
+  overflow:visible;
+  padding:22px 20px 20px;
+}
+#game .word { margin-top:10px; line-height:1.18; }
+#game .direction-label { margin-top:8px; }
+#game .ipa { margin:4px 0; }
+#game .sound-button { margin:12px auto; }
+#game .card-memory-wrap { margin-bottom:8px; }
+#game .answer-divider { margin:8px 0; }
+#game .answer h2 { margin:5px 0; overflow-wrap:anywhere; line-height:1.4; }
+#game .verb-forms { margin:8px auto; }
+#game .game-actions { position:sticky; bottom:calc(10px + env(safe-area-inset-bottom, 0px)); z-index:5; }
+@media(max-width:650px) {
+  #game .flashcard { height:auto; min-height:0; padding:18px 15px 16px; border-radius:29px; }
+  #game .card-decor { font-size:32px; top:-18px; }
+  #game .card-tag { padding:5px 13px; font-size:11px; }
+  #game .word { font-size:clamp(27px,8vw,39px); margin-top:9px; }
+  #game .sound-button { padding:8px 17px; margin:9px auto; }
+  #game .card-memory-wrap { margin-bottom:5px; }
+  #game .progress-track { margin:12px 0 20px; }
+  #game .game-top { margin-top:12px; }
+  #game .game-actions { margin-top:10px; }
+  #game .game-actions .big-button { min-height:54px; padding:12px 20px; }
+}
