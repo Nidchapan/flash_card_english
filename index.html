@@ -60,6 +60,28 @@
                     <span>บทสนทนาในเกม · English / ไทย</span>
                 </button>
             </div>
+            <div class="settings-panel learning-settings">
+                <div class="section-head">
+                    <h2>⚙️ Learning Settings <span>♡</span></h2>
+                </div>
+                <p class="muted">ปรับค่าเฉพาะรอบนี้ · ปิดหรือรีโหลดหน้าเว็บจะกลับค่า Default</p>
+                <form id="learning-settings-form" class="learning-settings-form">
+                    <label for="setting-start-date">Start Date
+                        <input id="setting-start-date" type="date" required>
+                    </label>
+                    <label for="setting-days">Days per Set
+                        <input id="setting-days" type="number" min="1" max="365" step="1" required>
+                    </label>
+                    <label for="setting-words">Words per Set
+                        <input id="setting-words" type="number" min="1" max="1000" step="1" required>
+                    </label>
+                    <div class="settings-actions">
+                        <button class="big-button" type="submit">✓ Apply Settings</button>
+                        <button class="mini-button" id="settings-reset" type="button">↻ Reset Default</button>
+                    </div>
+                </form>
+                <p id="settings-feedback" class="muted" role="status" aria-live="polite"></p>
+            </div>
             <div class="settings-panel home-summary">
                 <div class="section-head"><h2>Today's little plan <span>♡</span></h2></div>
                 <p id="date-summary" class="note">กำลังโหลดคำศัพท์...</p>

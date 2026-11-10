@@ -1,9 +1,12 @@
 "use strict";
 
-// Permanent learning calendar. Change manually only when you want a new schedule.
-const START_DATE = "2026-10-24";
-const DAYS_PER_SET = 10;
-const WORDS_PER_SET = 25;
+// Session-only settings: never written to localStorage, cookies, or Cache API.
+const DEFAULT_SETTINGS = Object.freeze({
+    startDate: "2026-10-24",
+    daysPerSet: 10,
+    wordsPerSet: 25
+});
+let settings = { ...DEFAULT_SETTINGS };
 const TABLE_PAGE_SIZE = 50;
 const $ = id => document.getElementById(id);
 
@@ -70,9 +73,9 @@ function shuffle(items) {
 function currentSetIndex(date = new Date()) {
     // Compare local calendar dates as UTC day numbers, avoiding DST/time-of-day drift.
     const todayDay = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-    const [year, month, day] = START_DATE.split("-").map(Number);
+    const [year, month, day] = settings.startDate.split("-").map(Number);
     const startDay = Date.UTC(year, month - 1, day);
-    return Math.max(0, Math.floor((todayDay - startDay) / 86400000 / DAYS_PER_SET));
+    return Math.max(0, Math.floor((todayDay - startDay) / 86400000 / settings.daysPerSet));
 }
 
 // The CSV is the sole source of truth. No browser persistence.
@@ -96,12 +99,12 @@ function orderedLearningWords() {
 }
 
 function getWordSchedule() {
-    // Dynamic queue: filter known FIRST, then partition by 10-day sets.
+    // Dynamic queue: filter known FIRST, then partition by configured sets.
     // Every enabled unknown word is in exactly one of: Review, New, Upcoming.
     const ordered = scheduledWords.filter(w => !truth(w.known));
     const index = currentSetIndex();
-    const start = index * WORDS_PER_SET;
-    const end = start + WORDS_PER_SET;
+    const start = index * settings.wordsPerSet;
+    const end = start + settings.wordsPerSet;
     return {
         ordered, current: ordered.slice(start, end), older: ordered.slice(0, start),
         upcoming: ordered.slice(end), start, end
@@ -148,7 +151,47 @@ function refreshHome() {
     const setIndex = currentSetIndex();
     const { current, older, upcoming } = getWordSchedule();
     $("new-set-label").textContent = `Set ${setIndex + 1} · ${current.length}/25 คำ · 10 วัน`;
-    $("date-summary").textContent = `Set ${setIndex + 1} · New ${current.length} คำ · Review ${older.length} คำ · รอเรียน ${upcoming.length} คำ · เริ่ม ${START_DATE}`;
+    $("date-summary").textContent = `Set ${setIndex + 1} · New ${current.length} คำ · Review ${older.length} คำ · รอเรียน ${upcoming.length} คำ · เริ่ม ${settings.startDate}`;
+}
+
+function syncSettingsInputs() {
+    $("setting-start-date").value = settings.startDate;
+    $("setting-days").value = String(settings.daysPerSet);
+    $("setting-words").value = String(settings.wordsPerSet);
+}
+
+function validCalendarDate(value) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year &&
+        date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+function applyLearningSettings(event) {
+    event.preventDefault();
+    const startDate = $("setting-start-date").value;
+    const daysPerSet = Number($("setting-days").value);
+    const wordsPerSet = Number($("setting-words").value);
+    const feedback = $("settings-feedback");
+
+    if (!validCalendarDate(startDate) ||
+        !Number.isSafeInteger(daysPerSet) || daysPerSet < 1 || daysPerSet > 365 ||
+        !Number.isSafeInteger(wordsPerSet) || wordsPerSet < 1 || wordsPerSet > 1000) {
+        feedback.textContent = "กรุณาใส่วันที่จริง จำนวนวัน 1–365 และจำนวนคำ 1–1000";
+        return;
+    }
+
+    settings = { startDate, daysPerSet, wordsPerSet };
+    refreshHome();
+    feedback.textContent = "✓ Apply สำเร็จ · อัปเดต Set แล้ว (ใช้เฉพาะหน้าที่เปิดอยู่)";
+}
+
+function resetLearningSettings() {
+    settings = { ...DEFAULT_SETTINGS };
+    syncSettingsInputs();
+    refreshHome();
+    $("settings-feedback").textContent = "↻ คืนค่า Default แล้ว";
 }
 
 function openSetup(mode) {
@@ -160,7 +203,7 @@ function openSetup(mode) {
     $("setup-title").textContent = mode === "new" ? "📖 New Words" : mode === "review" ? "🔁 Review" : "⭐ Practice Known";
     $("setup-count-wrap").classList.toggle("hidden", mode === "new");
     $("setup-description").textContent = mode === "new"
-        ? "25 คำที่ยังจำไม่ได้ใน Set ปัจจุบัน (อาจน้อยลงเมื่อคำศัพท์ใกล้หมด)"
+        ? `${settings.wordsPerSet} คำที่ยังจำไม่ได้ใน Set ปัจจุบัน (อาจน้อยลงเมื่อคำศัพท์ใกล้หมด)`
         : mode === "review" ? "สุ่มคำที่ยังจำไม่ได้จาก Set ก่อนหน้า" : "สุ่มคำที่ทำเครื่องหมาย known = TRUE";
     updateSetupButtons();
     updatePracticeUI();
@@ -429,6 +472,10 @@ async function load() {
         ["open-new", "open-review", "open-known", "open-all"].forEach(id => $(id).disabled = true);
     }
 }
+
+$("learning-settings-form").addEventListener("submit", applyLearningSettings);
+$("settings-reset").addEventListener("click", resetLearningSettings);
+syncSettingsInputs();
 
 $("open-new").addEventListener("click", () => openSetup("new"));
 $("open-review").addEventListener("click", () => openSetup("review"));

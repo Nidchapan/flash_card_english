@@ -1060,3 +1060,45 @@ footer {
 .typing-feedback.correct { color: #43876d; }
 .typing-panel .mini-button { justify-self: center; }
 #practice-description { margin: 10px 0 18px; }
+
+
+/* Session-only learning calendar controls */
+.learning-settings-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    align-items: end;
+}
+.learning-settings-form label {
+    display: grid;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 800;
+}
+.learning-settings-form input {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+    border: 2px solid #eadff1;
+    border-radius: 15px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+}
+.settings-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+.settings-actions .big-button {
+    width: auto;
+    flex: 1 1 210px;
+    margin: 0;
+}
+.settings-actions .mini-button { flex: 0 1 auto; }
+@media (max-width: 650px) {
+    .learning-settings-form { grid-template-columns: 1fr; }
+    .settings-actions { grid-column: 1; }
+}
