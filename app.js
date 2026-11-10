@@ -1,7 +1,7 @@
 "use strict";
 
 // Permanent learning calendar. Change manually only when you want a new schedule.
-const START_DATE = "2026-11-07";
+const START_DATE = "2026-10-24";
 const DAYS_PER_SET = 10;
 const WORDS_PER_SET = 25;
 const TABLE_PAGE_SIZE = 50;
@@ -18,6 +18,8 @@ const categories = [
 
 let words = [];
 let deck = [];
+let originalDeck = [];
+let summaryReturnPage = "game";
 let cursor = 0;
 let gameMode = "new";
 let selectedMode = "new";
@@ -64,7 +66,8 @@ function shuffle(items) {
 function currentSetIndex(date = new Date()) {
     // Compare local calendar dates as UTC day numbers, avoiding DST/time-of-day drift.
     const todayDay = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-    const startDay = Date.UTC(2026, 9, 24);
+    const [year, month, day] = START_DATE.split("-").map(Number);
+    const startDay = Date.UTC(year, month - 1, day);
     return Math.max(0, Math.floor((todayDay - startDay) / 86400000 / DAYS_PER_SET));
 }
 
@@ -112,10 +115,10 @@ function getKnownWords(count = 25) {
 }
 
 function show(id) {
-    ["home", "setup", "game", "complete", "all-words", "dialogue-list"].forEach(page => {
+    ["home", "setup", "game", "complete", "all-words", "dialogue-list", "round-summary"].forEach(page => {
         $(page).classList.toggle("hidden", page !== id);
     });
-    window.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo(0, 0);
 }
 
 function stopSpeech() {
@@ -141,7 +144,7 @@ function refreshHome() {
     const setIndex = currentSetIndex();
     const { current, older, upcoming } = getWordSchedule();
     $("new-set-label").textContent = `Set ${setIndex + 1} · ${current.length}/25 คำ · 10 วัน`;
-    $("date-summary").textContent = `Set ${setIndex + 1} · New ${current.length} คำ · Review ${older.length} คำ · รอเรียน ${upcoming.length} คำ · เริ่ม 24 Oct 2026`;
+    $("date-summary").textContent = `Set ${setIndex + 1} · New ${current.length} คำ · Review ${older.length} คำ · รอเรียน ${upcoming.length} คำ · เริ่ม ${START_DATE}`;
 }
 
 function openSetup(mode) {
@@ -176,6 +179,7 @@ function start(mode = selectedMode) {
     gameMode = mode;
     deck = mode === "review" ? getReviewWords(selectedCount)
         : mode === "known" ? getKnownWords(selectedCount) : getNewWords();
+    originalDeck = [...deck];
     if (!deck.length) {
         $("home-message").textContent = mode === "known"
             ? "ยังไม่มีคำศัพท์ที่ทำเครื่องหมายว่าจำได้ ♡"
@@ -316,7 +320,7 @@ function renderTable() {
         const isNew = newRows.has(word.rowNumber);
         const isOld = oldRows.has(word.rowNumber);
         status.className = `word-status ${isNew ? "status-new" : isOld ? "status-old" : "status-upcoming"}`;
-        status.textContent = isNew ? "🌱 New" : isOld ? "🔁 Old" : "🔒 Upcoming";
+        status.textContent = learningState(word) === "known" ? "⭐ Known" : isNew ? "🌱 New" : isOld ? "🔁 Old" : "🔒 Upcoming";
         statusCell.append(status);
         tr.append(statusCell);
         const memoryCell = document.createElement("td");
@@ -417,6 +421,119 @@ $("word-filter").addEventListener("click", event => {
 $("word-search").addEventListener("input", () => { tablePage = 0; renderTable(); });
 $("page-prev").addEventListener("click", () => { tablePage--; renderTable(); });
 $("page-next").addEventListener("click", () => { tablePage++; renderTable(); });
+
+
+// Session-only ordering. No localStorage, sessionStorage, IndexedDB, or cache writes.
+function openRoundSummary(fromPage = "game") {
+    if (!deck.length) return;
+    stopSpeech();
+    summaryReturnPage = fromPage;
+    renderRoundSummary();
+    show("round-summary");
+}
+
+function makeSummaryCell(row, value) {
+    const cell = document.createElement("td");
+    cell.textContent = value || "—";
+    row.append(cell);
+    return cell;
+}
+
+function summaryOrderButton(symbol, label, disabled, callback) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "summary-order-button";
+    button.textContent = symbol;
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    button.disabled = disabled;
+    button.addEventListener("click", callback);
+    return button;
+}
+
+function moveSummaryWord(from, to) {
+    if (from === to || from < 0 || to < 0 || to >= deck.length) return;
+    const [word] = deck.splice(from, 1);
+    const [direction] = cardDirections.splice(from, 1);
+    deck.splice(to, 0, word);
+    cardDirections.splice(to, 0, direction);
+    renderRoundSummary();
+}
+
+function renderRoundSummary() {
+    const body = $("summary-rows");
+    body.replaceChildren();
+    const unknown = deck.filter(word => learningState(word) === "learning").length;
+    txt("summary-count", `${deck.length} คำ · ยังจำไม่ได้ ${unknown} · จำได้ ${deck.length - unknown}`);
+
+    deck.forEach((word, index) => {
+        const tr = document.createElement("tr");
+        tr.className = learningState(word) === "learning" ? "summary-learning" : "";
+        makeSummaryCell(tr, String(index + 1));
+
+        const order = document.createElement("td");
+        order.className = "summary-order";
+        order.append(
+            summaryOrderButton("⤒", `ย้าย ${word.word} ขึ้นบนสุด`, index === 0, () => moveSummaryWord(index, 0)),
+            summaryOrderButton("↑", `เลื่อน ${word.word} ขึ้น`, index === 0, () => moveSummaryWord(index, index - 1)),
+            summaryOrderButton("↓", `เลื่อน ${word.word} ลง`, index === deck.length - 1, () => moveSummaryWord(index, index + 1))
+        );
+        tr.append(order);
+
+        makeSummaryCell(tr, word.word);
+        makeSummaryCell(tr, word.ipa_us);
+        makeSummaryCell(tr, word.pos);
+        makeSummaryCell(tr, word.meaning_th);
+        makeSummaryCell(tr, word.category);
+        const forms = ["v1", "v2", "v3", "future"]
+            .filter(key => word[key])
+            .map(key => `${key.toUpperCase()}: ${word[key]}`)
+            .join(" · ");
+        makeSummaryCell(tr, forms);
+        makeSummaryCell(tr, learningState(word) === "known" ? "✓ จำได้" : "↻ ยังจำไม่ได้");
+
+        const audioCell = document.createElement("td");
+        const audio = document.createElement("button");
+        audio.type = "button";
+        audio.className = "table-sound";
+        audio.textContent = "🔊";
+        audio.setAttribute("aria-label", `ฟังคำว่า ${word.word}`);
+        audio.addEventListener("click", () => speakText(word.word));
+        audioCell.append(audio);
+        tr.append(audioCell);
+        body.append(tr);
+    });
+}
+
+$("open-summary").addEventListener("click", () => openRoundSummary("game"));
+$("finish-summary").addEventListener("click", () => openRoundSummary("complete"));
+$("summary-back").addEventListener("click", () => {
+    stopSpeech();
+    show(summaryReturnPage);
+    if (summaryReturnPage === "game") {
+        cursor = Math.min(cursor, deck.length - 1);
+        renderCard();
+    }
+});
+$("summary-study").addEventListener("click", () => {
+    stopSpeech();
+    cursor = 0;
+    show("game");
+    renderCard();
+});
+$("summary-reset").addEventListener("click", () => {
+    const directions = new Map(deck.map((word, index) => [word, cardDirections[index]]));
+    deck = [...originalDeck];
+    cardDirections = deck.map(word => directions.get(word));
+    renderRoundSummary();
+});
+$("summary-unknown").addEventListener("click", () => {
+    const paired = deck.map((word, index) => ({ word, direction: cardDirections[index] }));
+    paired.sort((a, b) => Number(learningState(a.word) === "known") - Number(learningState(b.word) === "known"));
+    deck = paired.map(item => item.word);
+    cardDirections = paired.map(item => item.direction);
+    renderRoundSummary();
+});
 
 refreshHome();
 load();

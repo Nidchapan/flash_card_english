@@ -987,3 +987,67 @@ footer {
   #game .game-actions { bottom:calc(10px + env(safe-area-inset-bottom, 0px)); }
   #game .game-actions .big-button { min-height:56px; }
 }
+
+
+/* Session word summary: readable on desktop, horizontally scrollable on phones. */
+.game-top-actions,
+.summary-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.summary-toolbar {
+    margin: 18px 0;
+}
+
+.summary-table {
+    min-width: 1050px;
+}
+
+.summary-table th,
+.summary-table td {
+    vertical-align: middle;
+}
+
+.summary-table td:first-child {
+    text-align: center;
+}
+
+.summary-learning {
+    background: #fff6fa;
+}
+
+.summary-order {
+    white-space: nowrap;
+}
+
+.summary-order-button {
+    border: 1px solid #e8d9ee;
+    background: #f4edff;
+    border-radius: 9px;
+    padding: 6px 9px;
+    margin: 2px;
+    font-weight: 900;
+}
+
+.summary-order-button:disabled {
+    opacity: .3;
+    cursor: default;
+}
+
+@media (max-width: 650px) {
+    .game-top {
+        flex-wrap: wrap;
+    }
+
+    .game-top-actions .mini-button {
+        padding: 8px 11px;
+        font-size: 12px;
+    }
+
+    .summary-toolbar .mini-button {
+        flex: 1;
+    }
+}

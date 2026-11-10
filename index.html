@@ -95,7 +95,7 @@
             <div class="game-top">
                 <button class="mini-button" id="go-home">⌂ Home</button>
                 <div class="progress-label" id="progress-label"></div>
-                <button class="mini-button" id="restart">↻ Restart</button>
+                <div class="game-top-actions"><button class="mini-button" id="open-summary">📋 Word Summary</button><button class="mini-button" id="restart">↻ Restart</button></div>
             </div>
             <div class="progress-track"><div id="progress-fill"></div></div>
             <div class="card-wrap">
@@ -121,6 +121,29 @@
             <div class="examples-panel hidden" id="examples-panel">
                 <h3>✧ Example sentences ✧</h3>
                 <div class="examples" id="examples"></div>
+            </div>
+        </section>
+
+        <section class="screen hidden" id="round-summary">
+            <div class="game-top">
+                <button type="button" class="mini-button" id="summary-back">← Back</button>
+                <strong class="progress-label">📋 Word Summary</strong>
+            </div>
+            <div class="all-panel">
+                <h2>คำศัพท์ในรอบนี้ ♡</h2>
+                <p class="muted" id="summary-count" role="status"></p>
+                <p class="note">กด ⤒ เพื่อย้ายคำที่อยากเน้นไปบนสุด หรือ ↑ ↓ เพื่อจัดลำดับเอง การจัดเรียงใช้เฉพาะรอบนี้ ไม่บันทึกลงอุปกรณ์</p>
+                <div class="summary-toolbar">
+                    <button type="button" class="mini-button" id="summary-unknown">↻ ยังจำไม่ได้ขึ้นก่อน</button>
+                    <button type="button" class="mini-button" id="summary-reset">↺ Reset order</button>
+                </div>
+                <div class="table-scroll">
+                    <table class="vocab-table summary-table">
+                        <thead><tr><th>#</th><th>Order</th><th>Word</th><th>IPA (US)</th><th>Part of speech</th><th>คำแปล</th><th>Category</th><th>Verb forms</th><th>ความจำ</th><th>เสียง</th></tr></thead>
+                        <tbody id="summary-rows"></tbody>
+                    </table>
+                </div>
+                <button type="button" class="big-button" id="summary-study">▶ Study in this order ♡</button>
             </div>
         </section>
 
@@ -182,6 +205,7 @@
                 <h1>Sweet job!</h1>
                 <p id="finish-text"></p>
                 <button class="big-button" id="again">↻ Play again</button>
+                <button class="mini-button home-end" id="finish-summary">📋 Word Summary</button>
                 <button class="mini-button home-end" id="finish-home">⌂ Back to home</button>
             </div>
         </section>
