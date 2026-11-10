@@ -188,7 +188,7 @@ function updatePracticeUI() {
     });
     $("direction-wrap").classList.toggle("hidden", selectedPractice === "typing");
     $("practice-description").textContent = selectedPractice === "typing"
-        ? "แสดงคำแปลไทย → พิมพ์คำอังกฤษด้วยตัวเอง (ไม่สนตัวพิมพ์ใหญ่เล็ก)"
+        ? "เริ่มฝึกพิมพ์คำอังกฤษจากคำแปลไทยทันที (ไม่สนตัวพิมพ์ใหญ่เล็ก)"
         : "ดูคำศัพท์และกดเฉลยตามปกติ";
 }
 
@@ -278,6 +278,9 @@ function renderCard() {
         $("typing-skip").classList.remove("hidden");
         txt("meaning", word.word);
         txt("answer-divider", "✧ English answer ✧");
+        if (window.matchMedia("(pointer: fine)").matches) {
+            $("typing-input").focus({ preventScroll: true });
+        }
     }
 
     const forms = [word.v1, word.v2, word.v3, word.future];
@@ -437,6 +440,7 @@ $("setup-practices").addEventListener("click", event => {
     if (!button) return;
     selectedPractice = button.dataset.practice;
     updatePracticeUI();
+    if (selectedPractice === "typing") start(selectedMode);
 });
 $("typing-input").addEventListener("keydown", event => {
     if (event.key === "Enter" && !event.isComposing) {
