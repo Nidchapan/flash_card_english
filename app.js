@@ -25,6 +25,10 @@ let gameMode = "new";
 let selectedMode = "new";
 let selectedCount = "25";
 let selectedDirection = "mixed";
+let selectedPractice = "flashcard";
+let typingChecked = false;
+let typingCorrect = false;
+let typingResults = [];
 let cardDirections = [];
 let scheduledWords = [];
 let tablePage = 0;
@@ -152,12 +156,14 @@ function openSetup(mode) {
     selectedMode = mode;
     selectedCount = "25";
     selectedDirection = "mixed";
+    selectedPractice = "flashcard";
     $("setup-title").textContent = mode === "new" ? "📖 New Words" : mode === "review" ? "🔁 Review" : "⭐ Practice Known";
     $("setup-count-wrap").classList.toggle("hidden", mode === "new");
     $("setup-description").textContent = mode === "new"
         ? "25 คำที่ยังจำไม่ได้ใน Set ปัจจุบัน (อาจน้อยลงเมื่อคำศัพท์ใกล้หมด)"
         : mode === "review" ? "สุ่มคำที่ยังจำไม่ได้จาก Set ก่อนหน้า" : "สุ่มคำที่ทำเครื่องหมาย known = TRUE";
     updateSetupButtons();
+    updatePracticeUI();
     show("setup");
 }
 
@@ -172,6 +178,46 @@ function updateSetupButtons() {
         button.classList.toggle("active", active);
         button.setAttribute("aria-pressed", String(active));
     });
+}
+
+function updatePracticeUI() {
+    document.querySelectorAll("[data-practice]").forEach(button => {
+        const active = button.dataset.practice === selectedPractice;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+    });
+    $("direction-wrap").classList.toggle("hidden", selectedPractice === "typing");
+    $("practice-description").textContent = selectedPractice === "typing"
+        ? "แสดงคำแปลไทย → พิมพ์คำอังกฤษด้วยตัวเอง (ไม่สนตัวพิมพ์ใหญ่เล็ก)"
+        : "ดูคำศัพท์และกดเฉลยตามปกติ";
+}
+
+function normalizeAnswer(value) {
+    return norm(value).normalize("NFKC").toLocaleLowerCase("en-US").replace(/\s+/g, " ");
+}
+
+function checkTyping(skip = false) {
+    if (selectedPractice !== "typing" || typingChecked) return;
+    const input = $("typing-input");
+    if (!skip && !input.value.trim()) {
+        $("typing-feedback").textContent = "ลองพิมพ์คำตอบก่อน หรือกดดูเฉลย ♡";
+        return;
+    }
+    typingCorrect = !skip && normalizeAnswer(input.value) === normalizeAnswer(deck[cursor].word);
+    typingChecked = true;
+    typingResults[cursor] = typingCorrect;
+    input.disabled = true;
+    $("typing-feedback").textContent = typingCorrect
+        ? `✓ ถูกต้อง! ${deck[cursor].word} ♡`
+        : `✦ คำตอบที่ถูกต้อง: ${deck[cursor].word}`;
+    $("typing-feedback").classList.toggle("correct", typingCorrect);
+    $("answer").classList.remove("hidden");
+    $("speak").classList.remove("hidden");
+    txt("ipa", deck[cursor].ipa_us);
+    txt("part", deck[cursor].pos);
+    $("typing-skip").classList.add("hidden");
+    txt("next", cursor === deck.length - 1 ? "Finish round ✨" : "Next word ➜");
+    speakText(deck[cursor].word);
 }
 
 function start(mode = selectedMode) {
@@ -194,6 +240,7 @@ function start(mode = selectedMode) {
         : deck.map(() => selectedDirection);
     $("home-message").textContent = "";
     cursor = 0;
+    typingResults = [];
     show("game");
     renderCard();
 }
@@ -208,7 +255,7 @@ function renderCard() {
     const category = categories.find(item => item.id === word.category);
     txt("card-decor", category?.emoji || "☁️");
     txt("card-category", category?.name || word.category);
-    const thaiFirst = cardDirections[cursor] === "th";
+    const thaiFirst = selectedPractice === "typing" || cardDirections[cursor] === "th";
     txt("word", thaiFirst ? word.meaning_th : word.word);
     txt("ipa", thaiFirst ? "" : word.ipa_us);
     txt("part", thaiFirst ? "" : word.pos);
@@ -218,7 +265,20 @@ function renderCard() {
     $("card-direction").textContent = thaiFirst ? "ไทย → อังกฤษ" : "English → Thai";
     $("answer").classList.add("hidden");
     $("examples-panel").classList.add("hidden");
-    $("reveal").classList.remove("hidden");
+    $("reveal").classList.toggle("hidden", selectedPractice === "typing");
+    $("typing-panel").classList.toggle("hidden", selectedPractice !== "typing");
+    $("keyboard-hint").textContent = selectedPractice === "typing" ? "⌨️ Enter = Check / Next" : "⌨️ Space = Reveal · → = Reveal / Next";
+    if (selectedPractice === "typing") {
+        typingChecked = false;
+        typingCorrect = false;
+        $("typing-input").value = "";
+        $("typing-input").disabled = false;
+        $("typing-feedback").textContent = "";
+        $("typing-feedback").classList.remove("correct");
+        $("typing-skip").classList.remove("hidden");
+        txt("meaning", word.word);
+        txt("answer-divider", "✧ English answer ✧");
+    }
 
     const forms = [word.v1, word.v2, word.v3, word.future];
     $("verb-forms").classList.toggle("hidden", !forms.some(Boolean));
@@ -249,7 +309,7 @@ function renderCard() {
         box.append(line, translation);
         $("examples").append(box);
     }
-    txt("next", "Reveal answer ♡");
+    txt("next", selectedPractice === "typing" ? "Check answer ♡" : "Reveal answer ♡");
     if (!thaiFirst) speakText(word.word);
 }
 
@@ -268,13 +328,17 @@ function revealAnswer() {
 }
 
 function next() {
+    if (selectedPractice === "typing" && !typingChecked) { checkTyping(); return; }
     if ($("answer").classList.contains("hidden")) {
         revealAnswer();
         return;
     }
     stopSpeech();
     if (cursor + 1 >= deck.length) {
-        txt("finish-text", `คุณเรียนครบ ${deck.length} คำแล้ว! กลับมาทบทวนได้ทุกเมื่อ ♡`);
+        const correct = typingResults.filter(Boolean).length;
+        txt("finish-text", selectedPractice === "typing"
+            ? `ฝึกครบ ${deck.length} คำ · ตอบถูก ${correct} · ยังต้องฝึก ${deck.length - correct} คำ ♡`
+            : `คุณเรียนครบ ${deck.length} คำแล้ว! กลับมาทบทวนได้ทุกเมื่อ ♡`);
         show("complete");
     } else {
         cursor++;
@@ -368,6 +432,19 @@ $("open-review").addEventListener("click", () => openSetup("review"));
 $("open-known").addEventListener("click", () => openSetup("known"));
 $("setup-home").addEventListener("click", () => show("home"));
 $("setup-start").addEventListener("click", () => start(selectedMode));
+$("setup-practices").addEventListener("click", event => {
+    const button = event.target.closest("[data-practice]");
+    if (!button) return;
+    selectedPractice = button.dataset.practice;
+    updatePracticeUI();
+});
+$("typing-input").addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.isComposing) {
+        event.preventDefault();
+        next();
+    }
+});
+$("typing-skip").addEventListener("click", () => checkTyping(true));
 $("setup-counts").addEventListener("click", event => {
     const button = event.target.closest("[data-count]");
     if (!button) return;
@@ -390,7 +467,7 @@ $("next").addEventListener("click", next);
 
 // Desktop keyboard shortcuts, active only during flashcard practice.
 document.addEventListener("keydown", event => {
-    if ($("game").classList.contains("hidden")) return;
+    if ($("game").classList.contains("hidden") || selectedPractice === "typing") return;
     if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
     const target = event.target;
     if (target instanceof HTMLElement && (target.isContentEditable ||

@@ -81,11 +81,19 @@
                         <button type="button" class="choice" data-count="all">All</button>
                     </div>
                 </div>
+                <h3>วิธีฝึกคำศัพท์</h3>
+                <div class="setup-choices" id="setup-practices" role="group" aria-label="เลือกวิธีฝึก">
+                    <button type="button" class="choice active" data-practice="flashcard" aria-pressed="true">🃏 Flashcard</button>
+                    <button type="button" class="choice" data-practice="typing" aria-pressed="false">⌨️ Type to Recall</button>
+                </div>
+                <p class="muted" id="practice-description">ดูคำศัพท์และกดเฉลยตามปกติ</p>
+                <div id="direction-wrap">
                 <h3>รูปแบบคำถาม</h3>
                 <div class="setup-choices" id="setup-directions">
                     <button type="button" class="choice" data-direction="en">🇺🇸 English → ไทย</button>
                     <button type="button" class="choice" data-direction="th">🇹🇭 ไทย → English</button>
                     <button type="button" class="choice" data-direction="mixed">🎲 สุ่มคละกัน</button>
+                </div>
                 </div>
                 <button type="button" class="big-button setup-start" id="setup-start">Start learning ♡</button>
             </div>
@@ -114,10 +122,16 @@
                         <div class="verb-forms hidden" id="verb-forms"></div>
                     </div>
                     <button class="reveal-button" id="reveal">Tap to reveal ♡</button>
+                    <div id="typing-panel" class="typing-panel hidden">
+                        <label for="typing-input">⌨️ พิมพ์คำศัพท์ภาษาอังกฤษ</label>
+                        <input id="typing-input" class="word-search" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the English word...">
+                        <p id="typing-feedback" class="typing-feedback" role="status" aria-live="polite"></p>
+                        <button type="button" class="mini-button" id="typing-skip">ดูเฉลย / Skip</button>
+                    </div>
                 </div>
             </div>
             <div class="game-actions"><button class="big-button" id="next" type="button">Reveal answer ♡</button></div>
-            <p class="keyboard-hint">⌨️ Space = Reveal · → = Reveal / Next</p>
+            <p class="keyboard-hint" id="keyboard-hint">⌨️ Space = Reveal · → = Reveal / Next</p>
             <div class="examples-panel hidden" id="examples-panel">
                 <h3>✧ Example sentences ✧</h3>
                 <div class="examples" id="examples"></div>

@@ -1051,3 +1051,12 @@ footer {
         flex: 1;
     }
 }
+
+/* Type to Recall: same layout for New, Review, and Practice Known. */
+.typing-panel { max-width: 430px; margin: 18px auto 0; display: grid; gap: 10px; }
+.typing-panel label { font-size: 13px; font-weight: 800; }
+.typing-panel input { text-align: center; font-size: 17px; }
+.typing-feedback { min-height: 24px; margin: 0; color: #b46b91; font-weight: 800; font-size: 13px; }
+.typing-feedback.correct { color: #43876d; }
+.typing-panel .mini-button { justify-self: center; }
+#practice-description { margin: 10px 0 18px; }
