@@ -630,13 +630,9 @@ function renderRoundSummary() {
 
     deck.forEach((word, index) => {
         const card = document.createElement("article");
-        card.className = `summary-word-card ${learningState(word) === "learning" ? "summary-learning" : ""}`;
+        card.className = "summary-word-card";
         card.dataset.index = String(index);
         const handle = summaryDragHandle(index, word);
-        const content = document.createElement("div");
-        content.className = "summary-card-content";
-        const heading = document.createElement("div");
-        heading.className = "summary-card-heading";
         const number = document.createElement("span");
         number.className = "summary-card-number";
         number.textContent = String(index + 1).padStart(2, "0");
@@ -646,26 +642,38 @@ function renderRoundSummary() {
         wordButton.textContent = word.word;
         wordButton.title = `ฟังเสียง ${word.word}`;
         wordButton.addEventListener("click", () => speakText(word.word));
-        const speaker = document.createElement("span");
-        speaker.className = "summary-speaker";
-        speaker.textContent = " ◖))";
-        wordButton.append(speaker);
-        heading.append(number, wordButton);
-        const meta = document.createElement("div");
-        meta.className = "summary-card-meta";
+        const speaker = document.createElement("button");
+        speaker.type = "button";
+        speaker.className = "summary-row-sound";
+        speaker.textContent = "🔊";
+        speaker.setAttribute("aria-label", `ฟังเสียง ${word.word}`);
+        speaker.addEventListener("click", () => speakText(word.word));
         const ipa = document.createElement("span");
-        ipa.textContent = word.ipa_us || "";
+        ipa.className = "summary-row-ipa";
+        ipa.textContent = word.ipa_us || "—";
         const pos = document.createElement("span");
-        pos.textContent = word.pos || "";
-        meta.append(ipa, pos);
-        const meaning = document.createElement("div");
-        meaning.className = "summary-card-meaning";
-        meaning.textContent = word.meaning_th || "—";
+        pos.className = "summary-row-pos";
+        pos.textContent = word.pos || "—";
         const memory = document.createElement("span");
         memory.className = `summary-card-memory ${learningState(word) === "known" ? "is-known" : ""}`;
         memory.textContent = learningState(word) === "known" ? "✓ จำได้" : "♡ ยังจำไม่ได้";
-        content.append(heading, meta, meaning, memory);
-        card.append(handle, content);
+        const meaning = document.createElement("span");
+        meaning.className = "summary-card-meaning";
+        meaning.textContent = word.meaning_th || "—";
+        const top = document.createElement("button");
+        top.type = "button";
+        top.className = "summary-row-top";
+        top.textContent = "⤒ Top";
+        top.disabled = index === 0;
+        top.title = `ย้าย ${word.word} ขึ้นเป็นอันดับแรก`;
+        top.setAttribute("aria-label", top.title);
+        top.addEventListener("click", () => {
+            // Keep the viewport stable so the next unfamiliar word can be scanned.
+            const oldY = window.scrollY;
+            moveSummaryWord(index, 0);
+            window.scrollTo({ top: oldY, behavior: "instant" });
+        });
+        card.append(handle, number, wordButton, speaker, ipa, pos, memory, meaning, top);
         body.append(card);
     });
 }
