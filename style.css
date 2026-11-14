@@ -1102,3 +1102,26 @@ footer {
     .learning-settings-form { grid-template-columns: 1fr; }
     .settings-actions { grid-column: 1; }
 }
+
+/* Long pastel vocabulary cards — no horizontal table */
+#round-summary .all-panel { max-width: 800px; margin: 22px auto; padding: clamp(16px, 4vw, 32px); border-radius: 34px; background: rgba(255,255,255,.9); box-shadow: var(--shadow); }
+.summary-card-list { display: flex; flex-direction: column; gap: 11px; margin: 18px 0 26px; }
+.summary-word-card { display:flex; gap: 12px; align-items: stretch; padding: 17px 18px 17px 10px; background: linear-gradient(115deg,#fff9fc,#f9f6ff); border: 1px solid #f0e3f2; border-radius: 22px; box-shadow: 0 5px 15px #a997bd16; transition: box-shadow .15s, transform .15s; }
+.summary-word-card:nth-child(3n+2) { background: linear-gradient(115deg,#f8fbff,#f8f4ff); }
+.summary-word-card:nth-child(3n) { background: linear-gradient(115deg,#fffdf5,#fff7fa); }
+.summary-word-card.dragging { opacity: .55; transform: scale(.99); }
+.summary-word-card.drag-target { outline: 3px dashed #c5a1df; outline-offset: 2px; }
+.summary-drag-handle { align-self:stretch; flex:0 0 40px; border:0; border-radius:15px; background:#f1e8fa; color:#9578b1; font-size:27px; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+.summary-drag-handle:active { cursor:grabbing; }
+.summary-card-content { min-width:0; flex:1; }
+.summary-card-heading { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.summary-card-number { color:#ae9dbd; font-weight:900; font-size:12px; }
+.summary-card-word { padding:0; background:none; border:0; color:#80629e; font-weight:900; font-size:clamp(19px,3vw,25px); overflow-wrap:anywhere; text-align:left; }
+.summary-card-word:hover { color:#c37ca7; }
+.summary-speaker { font-size:14px; color:#bd90b9; }
+.summary-card-meta { display:flex; gap:12px; flex-wrap:wrap; color:#9b8da9; font-size:12px; margin:4px 0 8px; }
+.summary-card-meta span+span { padding-left:12px; border-left:1px solid #e5d8e9; }
+.summary-card-meaning { font-size:14px; line-height:1.65; color:#665d78; }
+.summary-card-memory { display:inline-block; font-size:11px; font-weight:800; margin-top:10px; border-radius:20px; padding:4px 10px; background:#ffe8f1; color:#ad7193; }
+.summary-card-memory.is-known { background:#e2f5e9; color:#59856e; }
+@media(max-width:650px) { .summary-word-card { padding:12px 12px 12px 7px; gap:9px; } .summary-drag-handle { flex-basis:34px; } #round-summary .all-panel { margin:12px auto; } }

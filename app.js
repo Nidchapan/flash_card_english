@@ -1,10 +1,17 @@
 "use strict";
 
 // Session-only settings: never written to localStorage, cookies, or Cache API.
+function localTodayISO() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
 const DEFAULT_SETTINGS = Object.freeze({
-    startDate: "2026-10-24",
-    daysPerSet: 10,
-    wordsPerSet: 25
+    startDate: localTodayISO(),
+    daysPerSet: 7,
+    wordsPerSet: 35
 });
 let settings = { ...DEFAULT_SETTINGS };
 const TABLE_PAGE_SIZE = 50;
@@ -26,7 +33,7 @@ let summaryReturnPage = "game";
 let cursor = 0;
 let gameMode = "new";
 let selectedMode = "new";
-let selectedCount = "25";
+let selectedCount = "35";
 let selectedDirection = "mixed";
 let selectedPractice = "flashcard";
 let typingChecked = false;
@@ -150,8 +157,9 @@ function speakText(text) {
 function refreshHome() {
     const setIndex = currentSetIndex();
     const { current, older, upcoming } = getWordSchedule();
-    $("new-set-label").textContent = `Set ${setIndex + 1} · ${current.length}/25 คำ · 10 วัน`;
-    $("date-summary").textContent = `Set ${setIndex + 1} · New ${current.length} คำ · Review ${older.length} คำ · รอเรียน ${upcoming.length} คำ · เริ่ม ${settings.startDate}`;
+    $("hero-learning-description").textContent = `เรียนคำใหม่ ${settings.wordsPerSet} คำทุก ${settings.daysPerSet} วัน และกลับมาทบทวนคำเก่าได้ทุกเมื่อ ♡`;
+    $("new-set-label").textContent = `Set ${setIndex + 1} · ${current.length}/${settings.wordsPerSet} คำ · ${settings.daysPerSet} วัน`;
+    $("date-summary").textContent = `Set ${setIndex + 1} · New ${current.length}/${settings.wordsPerSet} คำ · Review ${older.length} คำ · รอเรียน ${upcoming.length} คำ · เริ่ม ${settings.startDate} · ทุก ${settings.daysPerSet} วัน`;
 }
 
 function syncSettingsInputs() {
@@ -197,13 +205,13 @@ function resetLearningSettings() {
 function openSetup(mode) {
     stopSpeech();
     selectedMode = mode;
-    selectedCount = "25";
+    selectedCount = "35";
     selectedDirection = "mixed";
     selectedPractice = "flashcard";
     $("setup-title").textContent = mode === "new" ? "📖 New Words" : mode === "review" ? "🔁 Review" : "⭐ Practice Known";
     $("setup-count-wrap").classList.toggle("hidden", mode === "new");
     $("setup-description").textContent = mode === "new"
-        ? `${settings.wordsPerSet} คำที่ยังจำไม่ได้ใน Set ปัจจุบัน (อาจน้อยลงเมื่อคำศัพท์ใกล้หมด)`
+        ? `${settings.wordsPerSet} คำต่อ Set · ${settings.daysPerSet} วันต่อ Set (อาจน้อยลงเมื่อคำศัพท์ใกล้หมด)`
         : mode === "review" ? "สุ่มคำที่ยังจำไม่ได้จาก Set ก่อนหน้า" : "สุ่มคำที่ทำเครื่องหมาย known = TRUE";
     updateSetupButtons();
     updatePracticeUI();
@@ -567,16 +575,42 @@ function makeSummaryCell(row, value) {
     return cell;
 }
 
-function summaryOrderButton(symbol, label, disabled, callback) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "summary-order-button";
-    button.textContent = symbol;
-    button.title = label;
-    button.setAttribute("aria-label", label);
-    button.disabled = disabled;
-    button.addEventListener("click", callback);
-    return button;
+function summaryDragHandle(index, word) {
+    const handle = document.createElement("button");
+    handle.type = "button";
+    handle.className = "summary-drag-handle";
+    handle.textContent = "⠿";
+    handle.title = `ลากเพื่อจัดลำดับ ${word.word}`;
+    handle.setAttribute("aria-label", handle.title);
+    handle.addEventListener("pointerdown", event => {
+        if (event.button !== 0 && event.pointerType === "mouse") return;
+        event.preventDefault();
+        const source = handle.closest(".summary-word-card");
+        source.classList.add("dragging");
+        handle.setPointerCapture(event.pointerId);
+        let targetIndex = index;
+        const onMove = moveEvent => {
+            const target = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest(".summary-word-card");
+            document.querySelectorAll(".summary-word-card.drag-target").forEach(el => el.classList.remove("drag-target"));
+            if (target && target.dataset.index !== undefined) {
+                targetIndex = Number(target.dataset.index);
+                if (target !== source) target.classList.add("drag-target");
+            }
+        };
+        const onEnd = () => {
+            handle.removeEventListener("pointermove", onMove);
+            handle.removeEventListener("pointerup", onEnd);
+            handle.removeEventListener("pointercancel", onCancel);
+            source.classList.remove("dragging");
+            document.querySelectorAll(".summary-word-card.drag-target").forEach(el => el.classList.remove("drag-target"));
+            moveSummaryWord(index, targetIndex);
+        };
+        const onCancel = () => { targetIndex = index; onEnd(); };
+        handle.addEventListener("pointermove", onMove);
+        handle.addEventListener("pointerup", onEnd);
+        handle.addEventListener("pointercancel", onCancel);
+    });
+    return handle;
 }
 
 function moveSummaryWord(from, to) {
@@ -595,41 +629,44 @@ function renderRoundSummary() {
     txt("summary-count", `${deck.length} คำ · ยังจำไม่ได้ ${unknown} · จำได้ ${deck.length - unknown}`);
 
     deck.forEach((word, index) => {
-        const tr = document.createElement("tr");
-        tr.className = learningState(word) === "learning" ? "summary-learning" : "";
-        makeSummaryCell(tr, String(index + 1));
-
-        const order = document.createElement("td");
-        order.className = "summary-order";
-        order.append(
-            summaryOrderButton("⤒", `ย้าย ${word.word} ขึ้นบนสุด`, index === 0, () => moveSummaryWord(index, 0)),
-            summaryOrderButton("↑", `เลื่อน ${word.word} ขึ้น`, index === 0, () => moveSummaryWord(index, index - 1)),
-            summaryOrderButton("↓", `เลื่อน ${word.word} ลง`, index === deck.length - 1, () => moveSummaryWord(index, index + 1))
-        );
-        tr.append(order);
-
-        makeSummaryCell(tr, word.word);
-        makeSummaryCell(tr, word.ipa_us);
-        makeSummaryCell(tr, word.pos);
-        makeSummaryCell(tr, word.meaning_th);
-        makeSummaryCell(tr, word.category);
-        const forms = ["v1", "v2", "v3", "future"]
-            .filter(key => word[key])
-            .map(key => `${key.toUpperCase()}: ${word[key]}`)
-            .join(" · ");
-        makeSummaryCell(tr, forms);
-        makeSummaryCell(tr, learningState(word) === "known" ? "✓ จำได้" : "↻ ยังจำไม่ได้");
-
-        const audioCell = document.createElement("td");
-        const audio = document.createElement("button");
-        audio.type = "button";
-        audio.className = "table-sound";
-        audio.textContent = "🔊";
-        audio.setAttribute("aria-label", `ฟังคำว่า ${word.word}`);
-        audio.addEventListener("click", () => speakText(word.word));
-        audioCell.append(audio);
-        tr.append(audioCell);
-        body.append(tr);
+        const card = document.createElement("article");
+        card.className = `summary-word-card ${learningState(word) === "learning" ? "summary-learning" : ""}`;
+        card.dataset.index = String(index);
+        const handle = summaryDragHandle(index, word);
+        const content = document.createElement("div");
+        content.className = "summary-card-content";
+        const heading = document.createElement("div");
+        heading.className = "summary-card-heading";
+        const number = document.createElement("span");
+        number.className = "summary-card-number";
+        number.textContent = String(index + 1).padStart(2, "0");
+        const wordButton = document.createElement("button");
+        wordButton.type = "button";
+        wordButton.className = "summary-card-word";
+        wordButton.textContent = word.word;
+        wordButton.title = `ฟังเสียง ${word.word}`;
+        wordButton.addEventListener("click", () => speakText(word.word));
+        const speaker = document.createElement("span");
+        speaker.className = "summary-speaker";
+        speaker.textContent = " ◖))";
+        wordButton.append(speaker);
+        heading.append(number, wordButton);
+        const meta = document.createElement("div");
+        meta.className = "summary-card-meta";
+        const ipa = document.createElement("span");
+        ipa.textContent = word.ipa_us || "";
+        const pos = document.createElement("span");
+        pos.textContent = word.pos || "";
+        meta.append(ipa, pos);
+        const meaning = document.createElement("div");
+        meaning.className = "summary-card-meaning";
+        meaning.textContent = word.meaning_th || "—";
+        const memory = document.createElement("span");
+        memory.className = `summary-card-memory ${learningState(word) === "known" ? "is-known" : ""}`;
+        memory.textContent = learningState(word) === "known" ? "✓ จำได้" : "♡ ยังจำไม่ได้";
+        content.append(heading, meta, meaning, memory);
+        card.append(handle, content);
+        body.append(card);
     });
 }
 

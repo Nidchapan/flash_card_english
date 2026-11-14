@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#fff2f8">
-    <meta name="description" content="Cloud Candy Vocab — 25 words every 10 days">
+    <meta name="description" content="Cloud Candy Vocab — customizable daily vocabulary sets">
     <title>Cloud Candy Vocab ☁️</title>
     <link rel="icon" type="image/png" href="assets/icon-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
@@ -31,7 +31,7 @@
                 <div class="hero-text">
                     <span class="eyebrow">✧ YOUR LITTLE ENGLISH GARDEN ✧</span>
                     <h1>Let's learn<br><em>something sweet!</em></h1>
-                    <p>เรียนคำใหม่ทีละ 25 คำทุก 10 วัน และกลับมาทบทวนคำเก่าได้ทุกเมื่อ ♡</p>
+                    <p id="hero-learning-description">เรียนคำใหม่ 35 คำทุก 7 วัน และกลับมาทบทวนคำเก่าได้ทุกเมื่อ ♡</p>
                 </div>
                 <div aria-hidden="true" class="hero-art hero-art-image">
                     <img src="assets/hero-cloud-rainbow.png" alt="" width="700" height="480">
@@ -41,7 +41,7 @@
             <div class="mode-grid">
                 <button class="mode-card mode-new" id="open-new">
                     <span class="mode-emoji">📖</span><strong>New Words</strong>
-                    <span id="new-set-label">25 คำ • 10 วัน</span>
+                    <span id="new-set-label">35 คำ • 7 วัน</span>
                 </button>
                 <button class="mode-card mode-review" id="open-review">
                     <span class="mode-emoji">🔁</span><strong>Review</strong>
@@ -168,17 +168,12 @@
             <div class="all-panel">
                 <h2>คำศัพท์ในรอบนี้ ♡</h2>
                 <p class="muted" id="summary-count" role="status"></p>
-                <p class="note">กด ⤒ เพื่อย้ายคำที่อยากเน้นไปบนสุด หรือ ↑ ↓ เพื่อจัดลำดับเอง การจัดเรียงใช้เฉพาะรอบนี้ ไม่บันทึกลงอุปกรณ์</p>
+                <p class="note">จับที่สัญลักษณ์ ⠿ แล้วลากการ์ดขึ้นหรือลงเพื่อจัดลำดับ · แตะคำศัพท์เพื่อฟังเสียง US · ไม่บันทึกลงอุปกรณ์</p>
                 <div class="summary-toolbar">
                     <button type="button" class="mini-button" id="summary-unknown">↻ ยังจำไม่ได้ขึ้นก่อน</button>
                     <button type="button" class="mini-button" id="summary-reset">↺ Reset order</button>
                 </div>
-                <div class="table-scroll">
-                    <table class="vocab-table summary-table">
-                        <thead><tr><th>#</th><th>Order</th><th>Word</th><th>IPA (US)</th><th>Part of speech</th><th>คำแปล</th><th>Category</th><th>Verb forms</th><th>ความจำ</th><th>เสียง</th></tr></thead>
-                        <tbody id="summary-rows"></tbody>
-                    </table>
-                </div>
+                <div class="summary-card-list" id="summary-rows" aria-label="รายการคำศัพท์สำหรับลากเรียงลำดับ"></div>
                 <button type="button" class="big-button" id="summary-study">▶ Study in this order ♡</button>
             </div>
         </section>
