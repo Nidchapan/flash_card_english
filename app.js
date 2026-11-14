@@ -673,7 +673,7 @@ function renderRoundSummary() {
             moveSummaryWord(index, 0);
             window.scrollTo({ top: oldY, behavior: "instant" });
         });
-        card.append(handle, number, wordButton, speaker, ipa, pos, memory, meaning, top);
+        card.append(top, handle, number, wordButton, speaker, ipa, pos, memory, meaning);
         body.append(card);
     });
 }
