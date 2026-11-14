@@ -1168,3 +1168,44 @@ footer {
     .summary-row-sound { grid-column: 5; grid-row: 1; }
     .summary-word-card .summary-card-meaning { grid-column: 6; grid-row: 1; }
 }
+
+/* v21: iPhone horizontal scroll, no clipped/wrapped English words.
+   Column order: Top | drag | number | word | audio | IPA | POS | Thai meaning | memory. */
+#round-summary .summary-horizontal-scroll {
+    width: 100%; max-width: 100%; min-width: 0;
+    overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y; scrollbar-width: thin;
+    padding-bottom: 10px;
+}
+#round-summary .summary-card-list { min-width: 940px; width: 100%; }
+#round-summary .summary-word-card,
+#round-summary .summary-word-card:nth-child(3n+2),
+#round-summary .summary-word-card:nth-child(3n) {
+    grid-template-columns: 65px 27px 28px minmax(155px,1.3fr) 35px minmax(120px,1fr) minmax(95px,.7fr) minmax(220px,2fr) 100px;
+    gap: 9px; min-height: 48px;
+}
+#round-summary .summary-card-word { overflow-wrap: normal; word-break: normal; white-space: nowrap; font-size: 15px; }
+#round-summary .summary-row-ipa, #round-summary .summary-row-pos {
+    display: block; overflow-wrap: normal; word-break: normal; white-space: nowrap;
+}
+#round-summary .summary-word-card .summary-card-meaning {
+    grid-column: auto; grid-row: auto; white-space: nowrap; font-size: 12px;
+}
+#round-summary .summary-word-card .summary-card-memory {
+    display: inline-block; grid-column: auto; grid-row: auto; white-space: nowrap;
+}
+#round-summary .summary-row-top, #round-summary .summary-row-sound { grid-column: auto; grid-row: auto; }
+#round-summary .summary-swipe-hint { display:none; font-size: 12px; color:#967eac; margin: 12px 0 0; }
+@media(max-width: 750px) {
+    #round-summary .all-panel { padding: 16px 12px; max-width: 100%; }
+    #round-summary .summary-swipe-hint { display:block; }
+    #round-summary .summary-card-list { min-width: 940px; }
+    #round-summary .summary-word-card,
+    #round-summary .summary-word-card:nth-child(3n+2),
+    #round-summary .summary-word-card:nth-child(3n) {
+        grid-template-columns: 65px 27px 28px 155px 35px 120px 95px 220px 100px;
+        padding: 6px 9px; gap: 9px;
+    }
+    #round-summary .summary-card-word { font-size: 15px; }
+}

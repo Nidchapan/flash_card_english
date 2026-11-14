@@ -173,7 +173,10 @@
                     <button type="button" class="mini-button" id="summary-unknown">↻ ยังจำไม่ได้ขึ้นก่อน</button>
                     <button type="button" class="mini-button" id="summary-reset">↺ Reset order</button>
                 </div>
-                <div class="summary-card-list" id="summary-rows" aria-label="รายการคำศัพท์สำหรับลากเรียงลำดับ"></div>
+                <p class="summary-swipe-hint">↔ เลื่อนซ้าย–ขวาเพื่อดูข้อมูลคำศัพท์ทั้งหมด</p>
+                <div class="summary-horizontal-scroll" role="region" aria-label="เลื่อนรายการคำศัพท์ในแนวนอน" tabindex="0">
+                    <div class="summary-card-list" id="summary-rows" aria-label="รายการคำศัพท์สำหรับลากเรียงลำดับ"></div>
+                </div>
                 <button type="button" class="big-button" id="summary-study">▶ Study in this order ♡</button>
             </div>
         </section>
