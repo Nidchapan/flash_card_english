@@ -1155,3 +1155,16 @@ footer {
     .summary-row-top { grid-column: 6; grid-row: 1; font-size: 10px; }
     .summary-row-sound { grid-column: 4; grid-row: 1; }
 }
+
+/* v20: Move-to-Top is the first control on every vocabulary row. */
+.summary-word-card, .summary-word-card:nth-child(3n+2), .summary-word-card:nth-child(3n) {
+    grid-template-columns: 65px 27px 29px minmax(95px,1.15fr) 32px minmax(70px,.85fr) minmax(55px,.65fr) minmax(92px,auto) minmax(140px,2fr);
+}
+@media(max-width:750px) {
+    .summary-word-card, .summary-word-card:nth-child(3n+2), .summary-word-card:nth-child(3n) {
+        grid-template-columns: 55px 25px 22px minmax(75px,1fr) 28px minmax(85px,1.4fr);
+    }
+    .summary-row-top { grid-column: 1; grid-row: 1; }
+    .summary-row-sound { grid-column: 5; grid-row: 1; }
+    .summary-word-card .summary-card-meaning { grid-column: 6; grid-row: 1; }
+}
