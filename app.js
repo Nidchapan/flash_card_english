@@ -29,6 +29,9 @@ const categories = [
 let words = [];
 let deck = [];
 let originalDeck = [];
+let fullRoundDeck = [];
+let fullRoundDirections = [];
+let focusedStudyActive = false;
 const focusSelection = new Set();
 function clearFocusSelection() { focusSelection.clear(); }
 let summaryReturnPage = "game";
@@ -280,6 +283,9 @@ function start(mode = selectedMode) {
     deck = mode === "review" ? getReviewWords(selectedCount)
         : mode === "known" ? getKnownWords(selectedCount) : getNewWords();
     originalDeck = [...deck];
+    fullRoundDeck = [];
+    fullRoundDirections = [];
+    focusedStudyActive = false;
     clearFocusSelection();
     if (!deck.length) {
         $("home-message").textContent = mode === "known"
@@ -568,6 +574,11 @@ function openRoundSummary(fromPage = "game") {
     if (!deck.length) return;
     stopSpeech();
     summaryReturnPage = fromPage;
+    // Summary always displays the complete original round, not the focused subset.
+    if (focusedStudyActive) {
+        deck = [...fullRoundDeck];
+        cardDirections = [...fullRoundDirections];
+    }
     renderRoundSummary();
     show("round-summary");
 }
@@ -700,6 +711,19 @@ $("open-summary").addEventListener("click", () => openRoundSummary("game"));
 $("finish-summary").addEventListener("click", () => openRoundSummary("complete"));
 $("summary-back").addEventListener("click", () => {
     stopSpeech();
+    if (focusedStudyActive) {
+        fullRoundDeck = [...deck];
+        fullRoundDirections = [...cardDirections];
+        const paired = fullRoundDeck.map((word, index) => ({ word, direction: fullRoundDirections[index] }))
+            .filter(item => focusSelection.has(item.word));
+        deck = paired.map(item => item.word);
+        cardDirections = paired.map(item => item.direction);
+        if (!deck.length) {
+            deck = [...fullRoundDeck];
+            cardDirections = [...fullRoundDirections];
+            focusedStudyActive = false;
+        }
+    }
     show(summaryReturnPage);
     if (summaryReturnPage === "game") {
         cursor = Math.min(cursor, deck.length - 1);
@@ -708,13 +732,19 @@ $("summary-back").addEventListener("click", () => {
 });
 $("summary-study").addEventListener("click", () => {
     stopSpeech();
-    if (focusSelection.size) {
-        const paired = deck.map((word, index) => ({ word, direction: cardDirections[index] }))
+    // Keep a separate complete list. Studying a subset must never delete
+    // the other cards from Word Summary.
+    fullRoundDeck = [...deck];
+    fullRoundDirections = [...cardDirections];
+    focusedStudyActive = focusSelection.size > 0;
+    if (focusedStudyActive) {
+        fullRoundDeck = [...deck];
+        fullRoundDirections = [...cardDirections];
+        const paired = fullRoundDeck.map((word, index) => ({ word, direction: fullRoundDirections[index] }))
             .filter(item => focusSelection.has(item.word));
         shuffle(paired);
         deck = paired.map(item => item.word);
         cardDirections = paired.map(item => item.direction);
-        originalDeck = [...deck];
     }
     cursor = 0;
     show("game");
