@@ -29,6 +29,8 @@ const categories = [
 let words = [];
 let deck = [];
 let originalDeck = [];
+const focusSelection = new Set();
+function clearFocusSelection() { focusSelection.clear(); }
 let summaryReturnPage = "game";
 let cursor = 0;
 let gameMode = "new";
@@ -132,6 +134,7 @@ function show(id) {
     ["home", "setup", "game", "complete", "all-words", "dialogue-list", "round-summary"].forEach(page => {
         $(page).classList.toggle("hidden", page !== id);
     });
+    if (id === "home") clearFocusSelection();
     window.scrollTo(0, 0);
 }
 
@@ -277,6 +280,7 @@ function start(mode = selectedMode) {
     deck = mode === "review" ? getReviewWords(selectedCount)
         : mode === "known" ? getKnownWords(selectedCount) : getNewWords();
     originalDeck = [...deck];
+    clearFocusSelection();
     if (!deck.length) {
         $("home-message").textContent = mode === "known"
             ? "ยังไม่มีคำศัพท์ที่ทำเครื่องหมายว่าจำได้ ♡"
@@ -626,11 +630,13 @@ function renderRoundSummary() {
     const body = $("summary-rows");
     body.replaceChildren();
     const unknown = deck.filter(word => learningState(word) === "learning").length;
-    txt("summary-count", `${deck.length} คำ · ยังจำไม่ได้ ${unknown} · จำได้ ${deck.length - unknown}`);
+    txt("summary-count", `${deck.length} คำ · ยังจำไม่ได้ ${unknown} · จำได้ ${deck.length - unknown} · Focus ${focusSelection.size}/${deck.length}`);
+    txt("summary-focus-count", `✓ Selected ${focusSelection.size} / ${deck.length} · ${focusSelection.size ? "สุ่มเฉพาะการ์ดสีเขียว" : "ยังไม่เลือก = เรียนทุกคำตามลำดับ"}`);
 
     deck.forEach((word, index) => {
         const card = document.createElement("article");
         card.className = "summary-word-card";
+        card.classList.toggle("is-focused", focusSelection.has(word));
         card.dataset.index = String(index);
         const handle = summaryDragHandle(index, word);
         const number = document.createElement("span");
@@ -673,7 +679,19 @@ function renderRoundSummary() {
             moveSummaryWord(index, 0);
             window.scrollTo({ top: oldY, behavior: "instant" });
         });
-        card.append(top, handle, number, wordButton, speaker, ipa, pos, meaning, memory);
+        const focus = document.createElement("button");
+        focus.type = "button";
+        focus.className = "summary-focus-button";
+        const selected = focusSelection.has(word);
+        focus.textContent = selected ? "✓ Selected" : "♡ Focus";
+        focus.setAttribute("aria-pressed", String(selected));
+        focus.setAttribute("aria-label", `${selected ? "ยกเลิก Focus" : "เลือก Focus"} ${word.word}`);
+        focus.addEventListener("click", () => {
+            if (focusSelection.has(word)) focusSelection.delete(word);
+            else focusSelection.add(word);
+            renderRoundSummary();
+        });
+        card.append(top, handle, number, wordButton, speaker, ipa, pos, meaning, memory, focus);
         body.append(card);
     });
 }
@@ -690,6 +708,14 @@ $("summary-back").addEventListener("click", () => {
 });
 $("summary-study").addEventListener("click", () => {
     stopSpeech();
+    if (focusSelection.size) {
+        const paired = deck.map((word, index) => ({ word, direction: cardDirections[index] }))
+            .filter(item => focusSelection.has(item.word));
+        shuffle(paired);
+        deck = paired.map(item => item.word);
+        cardDirections = paired.map(item => item.direction);
+        originalDeck = [...deck];
+    }
     cursor = 0;
     show("game");
     renderCard();

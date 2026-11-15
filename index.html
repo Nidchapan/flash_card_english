@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="Cloud Candy Vocab">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="stylesheet" href="style.css?v=22">
+    <link rel="stylesheet" href="style.css?v=23">
 </head>
 <body>
     <div class="floating f1">✦</div>
@@ -168,7 +168,8 @@
             <div class="all-panel">
                 <h2>คำศัพท์ในรอบนี้ ♡</h2>
                 <p class="muted" id="summary-count" role="status"></p>
-                <p class="note">กด ⤒ Top เพื่อย้ายคำขึ้นอันดับแรกทันที หรือจับ ⠿ เพื่อลากจัดลำดับ · แตะคำศัพท์เพื่อฟังเสียง US · ไม่บันทึกลงอุปกรณ์</p>
+                <p class="note">กด ♡ Focus เพื่อเลือกการ์ดสีเขียวสำหรับสุ่มฝึกเฉพาะคำ · กด ⤒ Top เพื่อย้ายคำขึ้นอันดับแรกทันที หรือจับ ⠿ เพื่อลากจัดลำดับ · แตะคำศัพท์เพื่อฟังเสียง US · ไม่บันทึกลงอุปกรณ์</p>
+                <p id="summary-focus-count" class="summary-focus-count" role="status" aria-live="polite"></p>
                 <div class="summary-toolbar">
                     <button type="button" class="mini-button" id="summary-unknown">↻ ยังจำไม่ได้ขึ้นก่อน</button>
                     <button type="button" class="mini-button" id="summary-reset">↺ Reset order</button>
@@ -245,6 +246,6 @@
         </section>
         <footer>made with ♡ · pastel words, brighter days</footer>
     </main>
-    <script defer src="app.js?v=22"></script>
+    <script defer src="app.js?v=23"></script>
 </body>
 </html>

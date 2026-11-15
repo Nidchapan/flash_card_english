@@ -1250,3 +1250,33 @@ footer {
     #round-summary .summary-row-top { font-size:10px; padding:6px 2px; }
     #round-summary .summary-word-card .summary-card-memory { font-size:9px; padding:4px 3px; }
 }
+
+/* v23: ephemeral focus selection in Word Summary */
+#round-summary .summary-focus-count { font-size:12px; font-weight:800; color:#548b73; margin:10px 0; }
+#round-summary .summary-word-card,
+#round-summary .summary-word-card:nth-child(3n+2),
+#round-summary .summary-word-card:nth-child(3n) {
+    grid-template-columns: 53px 23px 22px minmax(80px,1.1fr) 28px minmax(68px,.85fr) minmax(45px,.5fr) minmax(100px,1.5fr) 81px 83px;
+}
+#round-summary .summary-word-card.is-focused,
+#round-summary .summary-word-card.is-focused:nth-child(even),
+#round-summary .summary-word-card.is-focused:nth-child(3n) {
+    background:linear-gradient(110deg,#e4f8e9,#d6f2e3) !important;
+    border-color:#a4d8b7;
+    box-shadow:0 2px 9px #8ac9a83b;
+}
+#round-summary .summary-focus-button {
+    border:1px solid #b6d9c3; border-radius:10px; background:#f2fff7;
+    color:#548a6b; padding:5px 4px; font-size:10px; font-weight:900;
+    white-space:nowrap; min-width:0;
+}
+#round-summary .is-focused .summary-focus-button { background:#70bd91; border-color:#70bd91; color:white; }
+@media(max-width:750px) {
+    #round-summary .summary-card-list { min-width:805px; width:805px; }
+    #round-summary .summary-word-card,
+    #round-summary .summary-word-card:nth-child(3n+2),
+    #round-summary .summary-word-card:nth-child(3n) {
+        grid-template-columns:48px 22px 20px 95px 26px 80px 45px 140px 78px 83px;
+        gap:5px;
+    }
+}
